@@ -1,0 +1,36 @@
+cabal-version:       2.4
+name:                file-collector-backend
+version:             0.1.0.0
+synopsis:            Server for file-collector
+-- description:
+homepage:            https://github.com/isumif/file-collector
+-- bug-reports:
+license:             BSD-3-Clause
+license-file:        LICENSE
+author:              Isumi Feng
+maintainer:          contact@zelinf.net
+-- copyright:
+category:            Web
+extra-source-files:  CHANGELOG.md
+
+common base
+  build-depends:
+      base ^>=4.12
+  default-language: Haskell2010
+
+library
+  import: base
+  hs-source-dirs: src
+  exposed-modules:
+      Isumi.FileCollector.Server
+    , Isumi.FileCollector.Api
+  build-depends:
+      servant
+    , servant-server
+    , persistent
+    , persistent-postgresql
+    , text
+    , bytestring
+    , time
+    , aeson
+
