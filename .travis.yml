@@ -1,0 +1,24 @@
+dist: xenial
+language: haskell
+
+ghc:
+- "8.6.2"
+
+cabal:
+- "2.4"
+
+# addons:
+#   apt:
+#     packages:
+
+install:
+- ci_scripts/backend_install.sh
+
+script:
+- ci_scripts/backend_build_test.sh
+- ci_scripts/frontend_build_test.sh
+
+cache:
+  directories:
+  - $HOME/.cabal
+  - frontend/node_modules
