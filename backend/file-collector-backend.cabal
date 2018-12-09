@@ -17,20 +17,37 @@ common base
   build-depends:
       base ^>=4.12
   default-language: Haskell2010
+  ghc-options: -Wall
 
 library
   import: base
   hs-source-dirs: src
   exposed-modules:
-      Isumi.FileCollector.Server
-    , Isumi.FileCollector.Api
+      Isumi.FileCollector.Api
+    , Isumi.FileCollector.Api.Prelude
+    , Isumi.FileCollector.Server
+    , Isumi.FileCollector.Server.Handler
+    , Isumi.FileCollector.Server.Handler.Prelude
+    , Isumi.FileCollector.Server.SqlConnPool
+    , Isumi.FileCollector.Server.Auth
+    , Isumi.FileCollector.Server.Persist.Entity
+    , Isumi.FileCollector.Server.Persist.Entity.Role
+    , Isumi.FileCollector.Server.Persist.Entity.FileLocation
   build-depends:
-      servant
-    , servant-server
-    , persistent
-    , persistent-postgresql
-    , text
-    , bytestring
-    , time
-    , aeson
+      servant >= 0.15 && < 0.16
+    , servant-server >= 0.15 && < 0.16
+    , warp
+    , persistent >= 2.9.0 && < 2.10
+    , persistent-template >= 2.5.4 && < 2.6
+    , persistent-sqlite >= 2.9.0 && < 2.10
+    , esqueleto
+    , resource-pool
+    , text >= 1.2.3 && < 1.3
+    , bytestring >= 0.10.8 && < 0.11
+    , time >= 1.8.0 && < 1.9
+    , aeson >= 1.4.2 && < 1.5
+    , monad-logger >= 0.3.30 && < 0.4
+    , lens >= 4.17 && < 4.18
+    , mtl
+    , transformers
 
