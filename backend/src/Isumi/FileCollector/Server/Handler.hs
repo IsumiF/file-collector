@@ -9,9 +9,9 @@ import Control.Monad.Logger (runStdoutLoggingT)
 import Control.Monad.Reader (runReaderT)
 import Data.Pool (Pool)
 import Database.Persist.Sql (SqlBackend)
+import Isumi.FileCollector.Api (Api)
 import Isumi.FileCollector.Server.Handler.Prelude
 import Isumi.FileCollector.Server.SqlConnPool (getSqlConnPool)
-import Isumi.FileCollector.Api (Api)
 
 import qualified Isumi.FileCollector.Server.Handler.User as User
 

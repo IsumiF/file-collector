@@ -19,6 +19,11 @@ common base
   default-language: Haskell2010
   ghc-options: -Wall
 
+common exe-base
+  import: base
+  build-depends: file-collector-backend
+  ghc-options: -threaded
+
 library
   import: base
   hs-source-dirs: src
@@ -32,6 +37,7 @@ library
     , Isumi.FileCollector.Server.Handler.User
     , Isumi.FileCollector.Server.SqlConnPool
     , Isumi.FileCollector.Server.Auth
+    , Isumi.FileCollector.Server.Password
     , Isumi.FileCollector.Server.Persist
     , Isumi.FileCollector.Server.Persist.Prelude
     , Isumi.FileCollector.Server.Persist.Entity
@@ -54,29 +60,34 @@ library
     , lens >= 4.17 && < 4.18
     , mtl >= 2.2.2 && < 2.3
     , transformers >= 0.5.5 && < 0.6
+    , memory
+    , cryptonite
 
-executable file-collector-backend
-  import: base
+executable server
+  import: exe-base
   hs-source-dirs: app
   main-is: Server.hs
-  build-depends:
-      file-collector-backend
-  ghc-options: -threaded
 
 test-suite inttest
-  import: base
+  import: exe-base
   type: exitcode-stdio-1.0 
   main-is: Main.hs
   hs-source-dirs: test/int
   other-modules:
       Spec
+    , Isumi.FileCollector.IntTest.Client
+    , Isumi.FileCollector.IntTest.Client.UserSpec
+    , Isumi.FileCollector.IntTest.DbGen.Simple
   build-depends:
-      file-collector-backend
-    , hspec
+      hspec
+    , hspec-core
     , QuickCheck
     , servant
     , servant-client
+    , persistent
+    , persistent-sqlite
+    , text
+    , time
   build-tool-depends:
       hspec-discover:hspec-discover
-  ghc-options: -threaded
 

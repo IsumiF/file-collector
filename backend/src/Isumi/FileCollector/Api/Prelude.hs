@@ -4,7 +4,9 @@ module Isumi.FileCollector.Api.Prelude
   , UserCollector
   , UserUploader
   , UserAdmin
+  , Role(..)
   ) where
 
 import Isumi.FileCollector.Server.Auth (UserAdmin, UserCollector, UserUploader)
+import Isumi.FileCollector.Server.Persist.Entity (Role (..))
 import Servant.API

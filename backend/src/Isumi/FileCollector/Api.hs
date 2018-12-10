@@ -3,6 +3,7 @@
 
 module Isumi.FileCollector.Api
   ( Api
+  , Role(..)
   ) where
 
 import           Isumi.FileCollector.Api.Prelude
