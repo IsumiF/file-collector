@@ -16,18 +16,14 @@ module Isumi.FileCollector.Server.Persist.Entity
   , DirectoryId
   , File(..)
   , FileId
+  , Unique(..)
   , migrateAll
   ) where
 
-import Data.ByteString
-    ( ByteString
-    )
-import Data.Text
-    ( Text
-    )
-import Data.Time.Clock
-    ( UTCTime
-    )
+import Data.ByteString (ByteString)
+import Data.Text (Text)
+import Data.Time.Clock (UTCTime)
+import Database.Persist
 import Database.Persist.TH
 import Isumi.FileCollector.Server.Persist.Entity.FileLocation
 import Isumi.FileCollector.Server.Persist.Entity.Role

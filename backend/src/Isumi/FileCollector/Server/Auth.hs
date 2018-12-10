@@ -11,10 +11,7 @@ module Isumi.FileCollector.Server.Auth
   , UserAdmin(..)
   ) where
 
-import Isumi.FileCollector.Server.Persist.Entity
-    ( Role (..)
-    , User (..)
-    )
+import Isumi.FileCollector.Server.Persist.Entity (Role (..), User (..))
 import Servant
 
 type AuthContextEntries = '[

@@ -1,3 +1,4 @@
+{-# LANGUAGE DeriveGeneric              #-}
 {-# LANGUAGE EmptyDataDecls             #-}
 {-# LANGUAGE FlexibleContexts           #-}
 {-# LANGUAGE GADTs                      #-}
@@ -12,12 +13,20 @@ module Isumi.FileCollector.Server.Persist.Entity.Role
   ( Role(..)
   ) where
 
+import Data.Aeson
+    (FromJSON, ToJSON, defaultOptions, genericToEncoding, toEncoding)
 import Database.Persist.TH
+import GHC.Generics
 
 data Role = RoleUploader
           | RoleCollector
           | RoleAdmin
-            deriving (Show, Read, Eq)
+            deriving (Show, Read, Eq, Generic)
+
+instance ToJSON Role where
+    toEncoding = genericToEncoding defaultOptions
+
+instance FromJSON Role where
 
 derivePersistField "Role"
 

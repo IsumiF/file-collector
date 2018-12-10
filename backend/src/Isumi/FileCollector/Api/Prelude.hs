@@ -6,9 +6,5 @@ module Isumi.FileCollector.Api.Prelude
   , UserAdmin
   ) where
 
-import Isumi.FileCollector.Server.Auth
-    ( UserAdmin
-    , UserCollector
-    , UserUploader
-    )
+import Isumi.FileCollector.Server.Auth (UserAdmin, UserCollector, UserUploader)
 import Servant.API

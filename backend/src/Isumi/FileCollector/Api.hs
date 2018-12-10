@@ -5,12 +5,9 @@ module Isumi.FileCollector.Api
   ( Api
   ) where
 
-import Isumi.FileCollector.Api.Prelude
+import           Isumi.FileCollector.Api.Prelude
+import qualified Isumi.FileCollector.Api.User as User
 
-type Api = BasicAuth "uploader" UserUploader :> "api"
-    :> (ApiUpload :<|> ApiViewAll)
-
-type ApiUpload = "upload" :> Get '[JSON] Int
-
-type ApiViewAll = BasicAuth "collector" UserCollector
-    :> "view-all" :> Get '[JSON] Int
+type Api = BasicAuth "uploader" UserUploader :> "api" :>
+    ( User.Api
+    )

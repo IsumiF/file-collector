@@ -6,32 +6,18 @@ module Isumi.FileCollector.Server
   ( main
   ) where
 
-import Control.Monad.Logger
-    ( runStdoutLoggingT
-    )
-import Data.Proxy
-    ( Proxy (Proxy)
-    )
+import Control.Monad.Logger (runStdoutLoggingT)
+import Data.Proxy (Proxy (Proxy))
 import Database.Persist.Sqlite
-import Isumi.FileCollector.Api
-    ( Api
-    )
-import Isumi.FileCollector.Server.Auth
-    ( AuthContextEntries
-    , authContext
-    )
+import Isumi.FileCollector.Api (Api)
+import Isumi.FileCollector.Server.Auth (AuthContextEntries, authContext)
 import Isumi.FileCollector.Server.Handler
 import Isumi.FileCollector.Server.SqlConnPool
-import Network.Wai.Handler.Warp
-    ( run
-    )
+import Network.Wai.Handler.Warp (run)
 import Servant
 
 type ApiWithStatic = Api
                 :<|> "static" :> Raw
-
-server :: ServerT Api AppHandler
-server _ = pure 42 :<|> (const (pure 13))
 
 serverWithStatic :: FilePath -> ServerT ApiWithStatic AppHandler
 serverWithStatic staticFiles =

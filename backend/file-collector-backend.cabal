@@ -25,14 +25,19 @@ library
   exposed-modules:
       Isumi.FileCollector.Api
     , Isumi.FileCollector.Api.Prelude
+    , Isumi.FileCollector.Api.User
     , Isumi.FileCollector.Server
     , Isumi.FileCollector.Server.Handler
     , Isumi.FileCollector.Server.Handler.Prelude
+    , Isumi.FileCollector.Server.Handler.User
     , Isumi.FileCollector.Server.SqlConnPool
     , Isumi.FileCollector.Server.Auth
+    , Isumi.FileCollector.Server.Persist
+    , Isumi.FileCollector.Server.Persist.Prelude
     , Isumi.FileCollector.Server.Persist.Entity
     , Isumi.FileCollector.Server.Persist.Entity.Role
     , Isumi.FileCollector.Server.Persist.Entity.FileLocation
+    , Isumi.FileCollector.Server.Persist.User
   build-depends:
       servant >= 0.15 && < 0.16
     , servant-server >= 0.15 && < 0.16

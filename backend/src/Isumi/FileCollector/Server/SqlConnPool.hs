@@ -3,17 +3,11 @@ module Isumi.FileCollector.Server.SqlConnPool
   , initSqlConnPool
   ) where
 
-import Data.IORef
-import Data.Pool
-    ( Pool
-    )
-import Database.Persist.Sql
-    ( SqlBackend
-    )
-import System.IO.Unsafe
-    ( unsafePerformIO
-    )
 import Control.Monad.IO.Class
+import Data.IORef
+import Data.Pool (Pool)
+import Database.Persist.Sql (SqlBackend)
+import System.IO.Unsafe (unsafePerformIO)
 
 sqlConnPool :: IORef (Maybe (Pool SqlBackend))
 sqlConnPool = unsafePerformIO (newIORef Nothing)
