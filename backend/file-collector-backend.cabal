@@ -55,3 +55,28 @@ library
     , mtl >= 2.2.2 && < 2.3
     , transformers >= 0.5.5 && < 0.6
 
+executable file-collector-backend
+  import: base
+  hs-source-dirs: app
+  main-is: Server.hs
+  build-depends:
+      file-collector-backend
+  ghc-options: -threaded
+
+test-suite inttest
+  import: base
+  type: exitcode-stdio-1.0 
+  main-is: Main.hs
+  hs-source-dirs: test/int
+  other-modules:
+      Spec
+  build-depends:
+      file-collector-backend
+    , hspec
+    , QuickCheck
+    , servant
+    , servant-client
+  build-tool-depends:
+      hspec-discover:hspec-discover
+  ghc-options: -threaded
+
