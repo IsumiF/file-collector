@@ -94,6 +94,8 @@ test-suite inttest
     , data-default
     , temporary 
     , directory
+    , async
+    , http-client
   build-tool-depends:
       hspec-discover:hspec-discover
 
