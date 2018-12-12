@@ -17,4 +17,8 @@ spec =
         it "gets correct role for existing user" $ runReaderT $ do
           result <- runClientM' (userRole (BasicAuthData "admin" "admin"))
           lift $ result `shouldBe` Right (Just RoleAdmin)
+        it "reject with unauthorized for non-exist user" $ runReaderT $ do
+          result <- runClientM' (userRole (BasicAuthData "nonexist" "pwd"))
+          lift $ servantErrorStatusCode (fromLeft' result)
+            `shouldBe` Just 401
 

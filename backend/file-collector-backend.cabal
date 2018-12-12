@@ -98,6 +98,7 @@ test-suite inttest
     , http-client
     , mtl
     , transformers
+    , http-types
   build-tool-depends:
       hspec-discover:hspec-discover
 

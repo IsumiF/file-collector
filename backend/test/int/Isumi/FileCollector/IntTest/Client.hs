@@ -12,6 +12,8 @@ module Isumi.FileCollector.IntTest.Client
   , runClientM'
   , runReaderT
   , lift
+  , servantErrorStatusCode
+  , fromLeft'
   ) where
 
 import           Control.Concurrent.Async (Async, async, cancelWith, waitCatch)
@@ -28,6 +30,7 @@ import           Isumi.FileCollector.Server
     (mainWith, serverConfigDbPoolSize, serverConfigDbString, serverConfigPort)
 import           Network.HTTP.Client
     (Manager, defaultManagerSettings, newManager)
+import           Network.HTTP.Types.Status (statusCode)
 import           Network.Wai.Handler.Warp (Port)
 import           Servant.API
 import           Servant.Client
@@ -84,3 +87,20 @@ runClientM' c = do
 clientEnv :: Manager -> ClientEnv
 clientEnv m = mkClientEnv m (BaseUrl Http "localhost" port "")
 
+servantErrorStatusCode :: ServantError -> Maybe Int
+servantErrorStatusCode (FailureResponse resp) =
+    Just $ responseStatusCodeValue resp
+servantErrorStatusCode (DecodeFailure _ resp) =
+    Just $ responseStatusCodeValue resp
+servantErrorStatusCode (UnsupportedContentType _ resp) =
+    Just $ responseStatusCodeValue resp
+servantErrorStatusCode (InvalidContentTypeHeader resp) =
+    Just $ responseStatusCodeValue resp
+servantErrorStatusCode (ConnectionError _) = Nothing
+
+responseStatusCodeValue :: Response -> Int
+responseStatusCodeValue = statusCode . responseStatusCode
+
+fromLeft' :: Either a b -> a
+fromLeft' (Left x) = x
+fromLeft' _ = error "calling fromLeft' on Right"
