@@ -28,5 +28,13 @@ instance ToJSON Role where
 
 instance FromJSON Role where
 
+instance Ord Role where
+    compare lhs rhs = compare (toInt lhs) (toInt rhs)
+
+toInt :: Role -> Int
+toInt RoleUploader  = 0
+toInt RoleCollector = 1
+toInt RoleAdmin     = 2
+
 derivePersistField "Role"
 

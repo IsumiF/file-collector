@@ -52,7 +52,6 @@ File
   uploader UserId
   lastModifiedTime UTCTime
   location FileLocation
-  UniqueHash hash
   deriving Show
 |]
 
