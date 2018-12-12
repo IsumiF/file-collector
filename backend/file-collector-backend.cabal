@@ -96,6 +96,8 @@ test-suite inttest
     , directory
     , async
     , http-client
+    , mtl
+    , transformers
   build-tool-depends:
       hspec-discover:hspec-discover
 
