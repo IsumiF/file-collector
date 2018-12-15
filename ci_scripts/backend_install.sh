@@ -2,5 +2,4 @@
 
 cd backend
 
-cabal v2-update
-cabal v2-build --only-dependencies all
+stack --no-terminal --install-ghc test --only-dependencies

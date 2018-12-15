@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
 
 cd backend
-cabal v2-build --enable-documentation all && cabal v2-test all
+
+stack --no-terminal test --haddock --no-haddock-deps

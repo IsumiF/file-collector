@@ -45,8 +45,8 @@ library
     , Isumi.FileCollector.Server.Persist.Entity.FileLocation
     , Isumi.FileCollector.Server.Persist.User
   build-depends:
-      servant >= 0.15 && < 0.16
-    , servant-server >= 0.15 && < 0.16
+      servant >= 0.14 && < 0.16
+    , servant-server >= 0.14 && < 0.16
     , warp >= 3.2.25 && < 3.3
     , persistent >= 2.9.0 && < 2.10
     , persistent-template >= 2.5.4 && < 2.6

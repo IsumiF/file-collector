@@ -1,24 +1,24 @@
 dist: xenial
-language: haskell
+language: generic
 
-ghc:
-- "8.6.2"
+addons:
+  apt:
+    packages:
+      - libgmp-dev
 
-cabal:
-- "2.4"
-
-# addons:
-#   apt:
-#     packages:
+before_install:
+- mkdir -p ~/.local/bin
+- export PATH=$HOME/.local/bin:$PATH
+- travis_retry curl -L https://get.haskellstack.org/stable/linux-x86_64.tar.gz | tar xz --wildcards --strip-components=1 -C ~/.local/bin '*/stack'
 
 install:
-- ci_scripts/backend_install.sh
+- ci_scripts/backend_install.sh 
 
 script:
-- ci_scripts/backend_build_test.sh
 - ci_scripts/frontend_build_test.sh
+- ci_scripts/backend_build_test.sh
 
 cache:
   directories:
-  - $HOME/.cabal
   - frontend/node_modules
+  - $HOME/.stack
