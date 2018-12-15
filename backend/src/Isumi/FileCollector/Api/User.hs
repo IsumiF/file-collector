@@ -5,11 +5,10 @@ module Isumi.FileCollector.Api.User
   ( Api
   ) where
 
-import Isumi.FileCollector.Api.Prelude
-import Isumi.FileCollector.Server.Persist.Entity (Role)
+import Isumi.FileCollector.Api.Internal.Prelude
 
 type Api = "user" :>
-    ( GetRole
+    ( RoleGet
     )
 
-type GetRole = "role" :> Get '[JSON] (Maybe Role)
+type RoleGet = "role" :> Get '[JSON] (Maybe Role)

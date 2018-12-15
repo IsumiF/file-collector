@@ -43,7 +43,7 @@ Directory
   owner UserId
   name Text
   expireTime UTCTime Maybe
-  UniquePath owner name
+  UniqueDirOfOwner owner name
   deriving Show
 File
   hash ByteString
@@ -52,6 +52,7 @@ File
   uploader UserId
   lastModifiedTime UTCTime
   location FileLocation
+  UniqueNameInDir directory name
   deriving Show
 |]
 

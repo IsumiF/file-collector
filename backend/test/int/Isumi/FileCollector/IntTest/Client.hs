@@ -4,7 +4,10 @@
 {-# LANGUAGE TypeOperators       #-}
 
 module Isumi.FileCollector.IntTest.Client
-  ( userRole
+  (
+  -- client functions to access the API
+    clientUserRole
+  -- * Utilities
   , module Servant.Client
   , module Servant.API
   , module Isumi.FileCollector.Api
@@ -40,8 +43,8 @@ import           System.IO.Unsafe (unsafePerformIO)
 import           Test.Hspec (Spec, SpecWith, afterAll, beforeAll)
 import           Text.Read (readMaybe)
 
-userRole :: BasicAuthData -> ClientM (Maybe Role)
-userRole = client (Proxy :: Proxy Api)
+clientUserRole :: BasicAuthData -> ClientM (Maybe Role)
+clientUserRole = client (Proxy :: Proxy Api)
 
 port :: Port
 port = unsafePerformIO $ do
@@ -103,4 +106,4 @@ responseStatusCodeValue = statusCode . responseStatusCode
 
 fromLeft' :: Either a b -> a
 fromLeft' (Left x) = x
-fromLeft' _ = error "calling fromLeft' on Right"
+fromLeft' _        = error "calling fromLeft' on Right"

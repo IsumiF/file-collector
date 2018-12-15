@@ -17,6 +17,8 @@ module Isumi.FileCollector.Server.Auth
 import Control.Monad.Logger (runStdoutLoggingT)
 import Data.Text.Encoding (decodeUtf8)
 import Database.Persist.Sql (runSqlPool)
+import Isumi.FileCollector.Api
+    (UserAdmin (..), UserCollector (..), UserUploader (..))
 import Isumi.FileCollector.Server.Persist (IsDbOp)
 import Isumi.FileCollector.Server.Persist.Entity (Role (..), User (..))
 import Isumi.FileCollector.Server.Persist.User (checkCredential)
@@ -37,10 +39,6 @@ authContext =
     :. authCheckCollector
     :. authCheckAdmin
     :. EmptyContext
-
-newtype UserUploader = UserUploader User
-newtype UserCollector = UserCollector User
-newtype UserAdmin = UserAdmin User
 
 authCheckUploader :: BasicAuthCheck UserUploader
 authCheckUploader = authCheckRole RoleUploader UserUploader

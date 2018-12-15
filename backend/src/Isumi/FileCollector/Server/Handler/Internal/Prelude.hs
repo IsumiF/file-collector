@@ -4,10 +4,11 @@
 {-# LANGUAGE RankNTypes                 #-}
 {-# LANGUAGE ScopedTypeVariables        #-}
 
-module Isumi.FileCollector.Server.Handler.Prelude
+module Isumi.FileCollector.Server.Handler.Internal.Prelude
   ( module Servant
   , AppHandler(..)
   , runDbOp
+  , module Isumi.FileCollector.Api
   ) where
 
 import Control.Monad.IO.Class (MonadIO, liftIO)
@@ -17,6 +18,7 @@ import Data.Pool (Pool)
 import Database.Persist.Sql (SqlBackend, runSqlPool)
 import Isumi.FileCollector.Server.Persist (IsDbOp)
 import Servant
+import Isumi.FileCollector.Api hiding (Api)
 
 newtype AppHandler a = AppHandler
     (LoggingT (ReaderT (Pool SqlBackend) Handler) a)
