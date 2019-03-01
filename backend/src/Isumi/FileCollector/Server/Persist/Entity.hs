@@ -54,6 +54,10 @@ File
   location FileLocation
   UniqueNameInDir directory name
   deriving Show
+CanUploadTo
+  user UserId
+  directory DirectoryId
+  deriving Show
 |]
 
 -- | Create a user. Hash password automatically, but require IO

@@ -1,18 +1,14 @@
-const path = require("path");
-const HtmlWebpackPlugin = require("html-webpack-plugin");
+import path from 'path';
+import webpack from 'webpack';
+import CleanWebpackPlugin from 'clean-webpack-plugin';
 
-module.exports = {
-  entry: "./src/index.tsx",
-  output: {
-    filename: "bundle.js",
-    path: path.resolve(__dirname, "dist")
+const config: webpack.Configuration = {
+  entry: {
+    main: "./src/index.tsx"
   },
-
-  mode: "development",
-
-  devtool: "inline-source-map",
-  devServer: {
-    contentBase: "./dist/"
+  output: {
+    filename: "[name].bundle.js",
+    path: path.resolve(__dirname, "dist")
   },
 
   resolve: {
@@ -27,9 +23,7 @@ module.exports = {
   },
 
   plugins: [
-    new HtmlWebpackPlugin({
-      template: "src/index.html"
-    })
+    new CleanWebpackPlugin("dist/")
   ],
 
   externals: {
@@ -37,3 +31,5 @@ module.exports = {
     "react-dom": "ReactDOM"
   }
 }
+
+export default config;

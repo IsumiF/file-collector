@@ -1,9 +1,6 @@
-{-# LANGUAGE DataKinds           #-}
-{-# LANGUAGE FlexibleContexts    #-}
-{-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE TypeOperators       #-}
+{-# LANGUAGE FlexibleContexts #-}
 
-module Isumi.FileCollector.IntTest.Client
+module Isumi.FileCollector.IntTest.Client.Util
   (
   -- client functions to access the API
     clientUserRole

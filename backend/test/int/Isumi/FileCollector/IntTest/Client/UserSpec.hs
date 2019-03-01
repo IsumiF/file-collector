@@ -7,7 +7,7 @@ module Isumi.FileCollector.IntTest.Client.UserSpec
 
 import Test.Hspec
 
-import Isumi.FileCollector.IntTest.Client
+import Isumi.FileCollector.IntTest.Client.Util
 import Isumi.FileCollector.IntTest.DbGen.Simple (genDbSimple)
 
 spec :: Spec

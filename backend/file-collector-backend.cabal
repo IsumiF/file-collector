@@ -78,7 +78,7 @@ test-suite inttest
   hs-source-dirs: test/int
   other-modules:
       Spec
-    , Isumi.FileCollector.IntTest.Client
+    , Isumi.FileCollector.IntTest.Client.Util
     , Isumi.FileCollector.IntTest.Client.UserSpec
     , Isumi.FileCollector.IntTest.DbGen.Simple
   build-depends:
