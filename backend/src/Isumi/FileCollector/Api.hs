@@ -2,7 +2,7 @@
 {-# LANGUAGE TypeOperators #-}
 
 module Isumi.FileCollector.Api
-  ( 
+  (
   -- * The API
     Api
   -- * Data types
@@ -13,9 +13,9 @@ module Isumi.FileCollector.Api
   , User (..)
   ) where
 
-import qualified Isumi.FileCollector.Api.Directory as Directory
+import qualified Isumi.FileCollector.Api.Directory        as Directory
 import           Isumi.FileCollector.Api.Internal.Prelude
-import qualified Isumi.FileCollector.Api.User as User
+import qualified Isumi.FileCollector.Api.User             as User
 
 type Api = BasicAuth "uploader" UserUploader :> "api" :>
     ( User.Api

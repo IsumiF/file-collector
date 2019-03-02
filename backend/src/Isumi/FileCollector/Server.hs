@@ -61,4 +61,3 @@ instance Default ServerConfig where
 
 main :: IO ()
 main = mainWith def
-

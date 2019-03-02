@@ -16,9 +16,9 @@ import Control.Monad.Logger (LoggingT, MonadLogger, runStdoutLoggingT)
 import Control.Monad.Reader (MonadReader (ask), ReaderT)
 import Data.Pool (Pool)
 import Database.Persist.Sql (SqlBackend, runSqlPool)
+import Isumi.FileCollector.Api hiding (Api)
 import Isumi.FileCollector.Server.Persist (IsDbOp)
 import Servant
-import Isumi.FileCollector.Api hiding (Api)
 
 newtype AppHandler a = AppHandler
     (LoggingT (ReaderT (Pool SqlBackend) Handler) a)
