@@ -2,7 +2,7 @@
 {-# LANGUAGE FlexibleContexts #-}
 
 module Isumi.FileCollector.Server.Persist.Prelude
-  ( IsDbOp
+  ( Database
   , module Database.Persist
   ) where
 
@@ -12,5 +12,5 @@ import Control.Monad.Reader (MonadReader)
 import Database.Persist
 import Database.Persist.Sql (SqlBackend)
 
-type IsDbOp m = (MonadIO m, MonadReader SqlBackend m, MonadLogger m)
+type Database m = (MonadIO m, MonadReader SqlBackend m, MonadLogger m)
 

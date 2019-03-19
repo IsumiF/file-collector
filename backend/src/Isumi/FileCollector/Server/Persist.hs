@@ -1,5 +1,5 @@
 module Isumi.FileCollector.Server.Persist
-  ( IsDbOp
+  ( Database
   ) where
 
 import Isumi.FileCollector.Server.Persist.Prelude

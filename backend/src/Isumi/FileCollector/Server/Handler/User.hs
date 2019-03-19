@@ -9,4 +9,6 @@ import Isumi.FileCollector.Server.Persist.User
 server :: UserUploader -> ServerT Api AppHandler
 server (UserUploader user) = do
     let name = userName user
-    runDbOp $ getRoleByName name
+    runDbOp $ do
+      user <- getUserByName name
+      pure $ userRole <$> user

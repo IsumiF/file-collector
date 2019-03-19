@@ -19,7 +19,7 @@ import Data.Text.Encoding (decodeUtf8)
 import Database.Persist.Sql (runSqlPool)
 import Isumi.FileCollector.Api
     (UserAdmin (..), UserCollector (..), UserUploader (..))
-import Isumi.FileCollector.Server.Persist (IsDbOp)
+import Isumi.FileCollector.Server.Persist (Database)
 import Isumi.FileCollector.Server.Persist.Entity (Role (..), User (..))
 import Isumi.FileCollector.Server.Persist.User (checkCredential)
 import Isumi.FileCollector.Server.SqlConnPool
@@ -59,7 +59,7 @@ authCheckRole role userWrapper =
                       then Authorized (userWrapper user)
                       else Unauthorized
 
-runDbInIO :: forall a. (forall m. IsDbOp m => m a)
+runDbInIO :: forall a. (forall m. Database m => m a)
           -> IO a
 runDbInIO op = do
     pool <- getSqlConnPool

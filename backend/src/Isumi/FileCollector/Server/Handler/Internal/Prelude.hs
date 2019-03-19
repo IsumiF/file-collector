@@ -17,7 +17,7 @@ import Control.Monad.Reader (MonadReader (ask), ReaderT)
 import Data.Pool (Pool)
 import Database.Persist.Sql (SqlBackend, runSqlPool)
 import Isumi.FileCollector.Api hiding (Api)
-import Isumi.FileCollector.Server.Persist (IsDbOp)
+import Isumi.FileCollector.Server.Persist (Database)
 import Servant
 
 newtype AppHandler a = AppHandler
@@ -26,7 +26,7 @@ newtype AppHandler a = AppHandler
              , MonadReader (Pool SqlBackend), MonadLogger)
 
 runDbOp
-    :: forall a. (forall m. IsDbOp m => m a)
+    :: forall a. (forall m. Database m => m a)
     -> AppHandler a
 runDbOp op = do
     pool <- ask

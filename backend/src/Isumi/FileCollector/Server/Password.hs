@@ -14,10 +14,12 @@ import qualified Data.ByteString as ByteString
 saltSize :: Integral a => a
 saltSize = 64
 
+type HashDigest = Digest SHA3_512
+
 hashPwd :: ByteString -> IO ByteString
 hashPwd pwd = do
     salt :: ByteString <- getRandomBytes saltSize
-    let hashed = hash (salt <> pwd) :: Digest SHA3_512
+    let hashed = hash (salt <> pwd) :: HashDigest
     pure (salt <> ByteArray.convert hashed)
 
 verifyPwd :: ByteString -- ^password in plain text
@@ -25,5 +27,5 @@ verifyPwd :: ByteString -- ^password in plain text
           -> Bool
 verifyPwd pwd cipherText =
     let (salt, hashed) = ByteString.splitAt saltSize cipherText
-     in hashed == ByteArray.convert (hash (salt <> pwd) :: Digest SHA3_512)
+     in hashed == ByteArray.convert (hash (salt <> pwd) :: HashDigest)
 

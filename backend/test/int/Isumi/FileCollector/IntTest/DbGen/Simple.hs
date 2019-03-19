@@ -13,6 +13,7 @@ import Data.Time
 import Database.Persist
 import Database.Persist.Sql (runMigration)
 import Database.Persist.Sqlite (runSqlite)
+import Isumi.FileCollector.Server.Persist.User (mkUser)
 import Isumi.FileCollector.Server.Persist.Entity
 
 genDbSimple :: FilePath -> IO ()

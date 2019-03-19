@@ -17,9 +17,9 @@ module Isumi.FileCollector.Server.Persist.Entity
   , DirectoryId
   , File(..)
   , FileId
+  , CanUploadToId
   , Unique(..)
   , migrateAll
-  , mkUser
   ) where
 
 import Data.ByteString (ByteString)
@@ -27,7 +27,6 @@ import Data.Text (Text)
 import Data.Time.Clock (UTCTime)
 import Database.Persist
 import Database.Persist.TH
-import Isumi.FileCollector.Server.Password
 import Isumi.FileCollector.Server.Persist.Entity.FileLocation
 import Isumi.FileCollector.Server.Persist.Entity.Role
 
@@ -36,13 +35,13 @@ User
   name Text
   role Role
   displayName Text Maybe default=NULL
-  password ByteString
+  hashedPassword ByteString
   UniqueUserName name
   deriving Show
 Directory
   owner UserId
   name Text
-  expireTime UTCTime Maybe
+  expirationTime UTCTime Maybe
   UniqueDirOfOwner owner name
   deriving Show
 File
@@ -50,7 +49,7 @@ File
   name Text
   directory DirectoryId
   uploader UserId
-  lastModifiedTime UTCTime
+  lastModificationTime UTCTime
   location FileLocation
   UniqueNameInDir directory name
   deriving Show
@@ -59,13 +58,3 @@ CanUploadTo
   directory DirectoryId
   deriving Show
 |]
-
--- | Create a user. Hash password automatically, but require IO
-mkUser :: Text -- ^name
-       -> Role -- ^role
-       -> Maybe Text -- ^display name
-       -> ByteString -- ^password (in plain text)
-       -> IO User
-mkUser name role displayName password =
-    User name role displayName <$> hashPwd password
-
