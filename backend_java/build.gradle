@@ -17,8 +17,8 @@ group = 'net.zelinf.file-collector'
 version = '0.1.0'
 
 bootJar {
-    baseName = rootProject.name
-    version = version
+    archivesBaseName = rootProject.name
+    version = rootProject.version
 }
 
 repositories {
