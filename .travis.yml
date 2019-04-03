@@ -6,6 +6,8 @@ addons:
     packages:
       - libgmp-dev
 
+jdk: openjdk8
+
 before_install:
 - mkdir -p ~/.local/bin
 - export PATH=$HOME/.local/bin:$PATH
@@ -17,6 +19,7 @@ install:
 script:
 - ci_scripts/frontend_build_test.sh
 - ci_scripts/backend_build_test.sh
+- ci_scripts/backend_java_build_test.sh
 
 cache:
   directories:
