@@ -1,0 +1,26 @@
+cabal-version:       2.4
+name:                file-collector-common
+version:             0.1.0.0
+synopsis:            Common code shared by frontend and backend
+-- description:
+-- bug-reports:
+license:             BSD-3-Clause
+author:              Lagrand, Isumi Feng
+-- maintainer:
+copyright:           Copyright 2019, Lagrand, Isumi Feng
+category:            Web
+build-type:          Simple
+
+library
+  hs-source-dirs: src
+  default-language: Haskell2010
+  exposed-modules:
+      FileCollector.Common.Api
+      FileCollector.Common.Api.Dir
+      FileCollector.Common.Types.Directory
+  build-depends:
+      base       
+    , servant
+    , text
+    , time
+    , aeson

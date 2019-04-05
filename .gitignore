@@ -3,3 +3,6 @@ tags
 .vscode/
 .bashrc
 .vimrc
+dist-newstyle/
+dist/
+.ghc.environment*
