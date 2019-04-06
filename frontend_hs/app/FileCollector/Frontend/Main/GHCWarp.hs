@@ -2,7 +2,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TypeOperators     #-}
 
-module Main
+module FileCollector.Frontend.Main.GHCWarp
   ( main
   ) where
 
@@ -16,7 +16,7 @@ import           Network.Wai.Application.Static         (defaultWebAppSettings,
                                                          staticApp)
 import qualified Network.Wai.Handler.Warp               as Warp (run)
 import           Network.WebSockets.Connection          (defaultConnectionOptions)
-import           System.FilePath                        (takeDirectory)
+import           System.FilePath                        (takeDirectory, (</>))
 
 main :: IO ()
 main = do

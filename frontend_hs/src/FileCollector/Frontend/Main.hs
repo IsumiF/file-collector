@@ -1,3 +1,4 @@
+{-# LANGUAGE OverloadedLists   #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecursiveDo       #-}
 
@@ -11,20 +12,30 @@ import qualified Data.Map.Strict                   as Map
 import           Data.Text                         (Text, pack, unpack)
 import           Language.Javascript.JSaddle.Types (JSM)
 import           Reflex
-import           Reflex.Dom                        hiding (mainWidget)
-import           Reflex.Dom.Main                   (mainWidget)
+import           Reflex.Dom                        hiding (mainWidgetWithHead)
+import           Reflex.Dom.Main                   (mainWidgetWithHead)
 import           Text.Read                         (readMaybe)
 
 jsmMain :: JSM ()
-jsmMain = mainWidget $ el "div" $ do
-  nx <- numberInput
-  d <- dropdown Times (constDyn ops) def
-  ny <- numberInput
-  let values = zipDynWith (,) nx ny
-      result = zipDynWith (\o (x,y) -> runOp o <$> x <*> y) (_dropdown_value d) values
-      resultText = fmap (pack . show) result
-  text " = "
-  dynText resultText
+jsmMain = mainWidgetWithHead headElement $ do
+  el "h1" $ text "Simple Calculator"
+  el "div" $ do
+    nx <- numberInput
+    d <- dropdown Times (constDyn ops) def
+    ny <- numberInput
+    let values = zipDynWith (,) nx ny
+        result = zipDynWith (\o (x,y) -> runOp o <$> x <*> y) (_dropdown_value d) values
+        resultText = fmap (pack . show) result
+    text " = "
+    dynText resultText
+
+headElement :: MonadWidget t m => m ()
+headElement =
+  elAttr "link"
+    [ ("rel", "stylesheet")
+    , ("type", "text/css")
+    , ("href", "static/simple.css")
+    ] $ blank
 
 numberInput :: (MonadWidget t m) => m (Dynamic t (Maybe Double))
 numberInput = do

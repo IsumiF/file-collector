@@ -1,4 +1,4 @@
-cabal-version:       2.4
+cabal-version:       2.2
 name:                file-collector-frontend
 version:             0.1.0.0
 synopsis:            Web frontend of File Collector
@@ -9,7 +9,12 @@ author:              Lagrand, Isumi Feng
 -- maintainer:
 copyright:           Copyright 2019, Lagrand, Isumi Feng
 category:            Web
-build-type:          Simple
+build-type:          Custom
+custom-setup
+  setup-depends:
+      base ^>= 4.11
+    , Cabal ^>= 2.2
+    , filepath
 
 library
   hs-source-dirs: src
@@ -38,14 +43,17 @@ library
 executable app
   hs-source-dirs: app
   default-language: Haskell2010
-  if impl(ghc)
-    main-is: MainGHCWarp.hs
+  main-is: Main.hs
+  if !impl(ghcjs)
+    other-modules:
+      FileCollector.Frontend.Main.GHCWarp
   else
-    main-is: MainGHCJS.hs
+    other-modules:
+      FileCollector.Frontend.Main.GHCJS
   build-depends:
       base
     , file-collector-frontend
-  if impl(ghc)
+  if !impl(ghcjs)
     build-depends:
         jsaddle
       , filepath

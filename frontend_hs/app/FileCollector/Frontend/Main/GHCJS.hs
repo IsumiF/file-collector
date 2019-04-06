@@ -1,4 +1,4 @@
-module Main
+module FileCollector.Frontend.Main.GHCJS
   ( main
   ) where
 
