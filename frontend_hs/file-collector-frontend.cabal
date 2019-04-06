@@ -1,0 +1,57 @@
+cabal-version:       2.4
+name:                file-collector-frontend
+version:             0.1.0.0
+synopsis:            Web frontend of File Collector
+-- description:
+-- bug-reports:
+license:             BSD-3-Clause
+author:              Lagrand, Isumi Feng
+-- maintainer:
+copyright:           Copyright 2019, Lagrand, Isumi Feng
+category:            Web
+build-type:          Simple
+
+library
+  hs-source-dirs: src
+  default-language: Haskell2010
+  ghc-options:
+      -Wall
+      -Wno-simplifiable-class-constraints
+  exposed-modules:
+      FileCollector.Frontend.Main
+    , FileCollector.Frontend.Utils
+  build-depends:
+      base ^>= 4.11
+    , aeson ^>= 1.3.1.1
+    , containers ^>= 0.5.11
+    , jsaddle ^>= 0.9.6.0
+    , reflex ^>= 0.5.0.1
+    , reflex-dom ^>= 0.4
+    , reflex-dom-core ^>= 0.4
+    , servant ^>= 0.14.1
+    , servant-reflex ^>= 0.3.4
+    , text ^>= 1.2
+    , time ^>= 1.8
+  c-sources:
+      csrc/current_path.c
+
+executable app
+  hs-source-dirs: app
+  default-language: Haskell2010
+  if impl(ghc)
+    main-is: MainGHCWarp.hs
+  else
+    main-is: MainGHCJS.hs
+  build-depends:
+      base
+    , file-collector-frontend
+  if impl(ghc)
+    build-depends:
+        jsaddle
+      , filepath
+      , jsaddle-warp
+      , wai
+      , wai-app-static
+      , warp
+      , websockets
+  

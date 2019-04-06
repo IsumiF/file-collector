@@ -1,0 +1,11 @@
+compiler: ghcjs
+
+packages:
+  ./frontend_hs
+  ./common
+
+constraints: unix      installed
+           , directory installed
+           , process   installed
+           , time      installed
+           , filepath  installed
