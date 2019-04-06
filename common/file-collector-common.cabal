@@ -19,8 +19,8 @@ library
       FileCollector.Common.Api.Dir
       FileCollector.Common.Types.Directory
   build-depends:
-      base       
-    , servant
-    , text
-    , time
-    , aeson
+      base ^>= 4.11
+    , aeson ^>= 1.3.1.1
+    , servant ^>= 0.14.1
+    , text ^>= 1.2
+    , time ^>= 1.8
