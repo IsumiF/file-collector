@@ -14,11 +14,11 @@ before_install:
 - travis_retry curl -L https://get.haskellstack.org/stable/linux-x86_64.tar.gz | tar xz --wildcards --strip-components=1 -C ~/.local/bin '*/stack'
 
 install:
-- ci_scripts/backend_install.sh 
+- ci_scripts/backend_hs_install.sh 
 
 script:
-- ci_scripts/frontend_build_test.sh
-- ci_scripts/backend_build_test.sh
+- ci_scripts/frontend_ts_build_test.sh
+- ci_scripts/backend_hs_build_test.sh
 - ci_scripts/backend_java_build_test.sh
 
 cache:
