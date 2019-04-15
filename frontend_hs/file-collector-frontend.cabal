@@ -1,4 +1,4 @@
-cabal-version:       2.2
+cabal-version:       2.4
 name:                file-collector-frontend
 version:             0.1.0.0
 synopsis:            Web frontend of File Collector
@@ -10,10 +10,14 @@ author:              Lagrand, Isumi Feng
 copyright:           Copyright 2019, Lagrand, Isumi Feng
 category:            Web
 build-type:          Custom
+extra-source-files:
+    static/**/*.css
+  , static/**/*.ico
+
 custom-setup
   setup-depends:
       base ^>= 4.11
-    , Cabal ^>= 2.2
+    , Cabal ^>= 2.4
     , filepath
 
 library
@@ -62,4 +66,5 @@ executable app
       , wai-app-static
       , warp
       , websockets
+      , optparse-applicative
   
