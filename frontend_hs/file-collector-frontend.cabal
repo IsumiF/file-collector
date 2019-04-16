@@ -18,7 +18,7 @@ custom-setup
   setup-depends:
       base ^>= 4.11
     , Cabal ^>= 2.4
-    , filepath
+    , filepath ^>= 1.4.2
 
 library
   hs-source-dirs: src
@@ -41,6 +41,7 @@ library
     , servant-reflex ^>= 0.3.4
     , text ^>= 1.2
     , time ^>= 1.8
+    , lens ^>= 4.17
   c-sources:
       csrc/current_path.c
 
@@ -59,12 +60,12 @@ executable app
     , file-collector-frontend
   if !impl(ghcjs)
     build-depends:
-        jsaddle
-      , filepath
-      , jsaddle-warp
-      , wai
-      , wai-app-static
-      , warp
-      , websockets
-      , optparse-applicative
+        jsaddle ^>= 0.9.6.0
+      , filepath ^>= 1.4.2
+      , jsaddle-warp ^>= 0.9.6.0
+      , wai ^>= 3.2.2
+      , wai-app-static ^>= 3.1.6.3
+      , warp ^>= 3.2.26
+      , websockets ^>= 0.12.5.3
+      , optparse-applicative ^>= 0.14.3.0
   
