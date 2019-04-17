@@ -1,0 +1,23 @@
+resolver: lts-12.26
+# compiler: ghc-8.6.4
+packages:
+- frontend_hs
+- common
+extra-deps:
+- jsaddle-0.9.6.0
+- jsaddle-warp-0.9.6.0
+- reflex-0.5.0.1
+- reflex-dom-0.4
+- reflex-dom-core-0.4
+- servant-reflex-0.3.4
+- ref-tf-0.4.0.1
+- ghcjs-dom-0.9.4.0
+- zenc-0.1.1
+- ghcjs-dom-jsaddle-0.9.4.0
+- jsaddle-dom-0.9.3.1
+- monoidal-containers-0.4.0.0
+flags:
+  reflex-dom:
+    use-warp: true
+build:
+  haddock-hyperlink-source: false

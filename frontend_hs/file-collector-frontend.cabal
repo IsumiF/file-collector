@@ -1,4 +1,4 @@
-cabal-version:       2.4
+cabal-version:       2.2
 name:                file-collector-frontend
 version:             0.1.0.0
 synopsis:            Web frontend of File Collector
@@ -11,13 +11,13 @@ copyright:           Copyright 2019, Lagrand, Isumi Feng
 category:            Web
 build-type:          Custom
 extra-source-files:
-    static/**/*.css
-  , static/**/*.ico
+    static/*.css
+  , static/*.ico
 
 custom-setup
   setup-depends:
       base ^>= 4.11
-    , Cabal ^>= 2.4
+    , Cabal ^>= 2.2
     , filepath ^>= 1.4.2
 
 library
@@ -29,8 +29,12 @@ library
   exposed-modules:
       FileCollector.Frontend.Main
     , FileCollector.Frontend.Utils
+    , FileCollector.Frontend.AppEnv
+    , FileCollector.Frontend.UI.Login
+    , FileCollector.Frontend.UI.Uploader
   build-depends:
       base ^>= 4.11
+    , file-collector-common
     , aeson ^>= 1.3.1.1
     , containers ^>= 0.5.11
     , jsaddle ^>= 0.9.6.0
@@ -41,7 +45,9 @@ library
     , servant-reflex ^>= 0.3.4
     , text ^>= 1.2
     , time ^>= 1.8
-    , lens ^>= 4.17
+    , lens ^>= 4.16.1
+    , mtl
+    , transformers
   c-sources:
       csrc/current_path.c
 
@@ -63,9 +69,9 @@ executable app
         jsaddle ^>= 0.9.6.0
       , filepath ^>= 1.4.2
       , jsaddle-warp ^>= 0.9.6.0
-      , wai ^>= 3.2.2
-      , wai-app-static ^>= 3.1.6.3
-      , warp ^>= 3.2.26
-      , websockets ^>= 0.12.5.3
+      , wai ^>= 3.2.1.2
+      , wai-app-static ^>= 3.1.6.2
+      , warp ^>= 3.2.25
+      , websockets ^>= 0.12.5.2
       , optparse-applicative ^>= 0.14.3.0
   

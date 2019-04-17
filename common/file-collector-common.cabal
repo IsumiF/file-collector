@@ -1,4 +1,4 @@
-cabal-version:       2.4
+cabal-version:       2.2
 name:                file-collector-common
 version:             0.1.0.0
 synopsis:            Common code shared by frontend and backend
@@ -18,9 +18,12 @@ library
       FileCollector.Common.Api
       FileCollector.Common.Api.Dir
       FileCollector.Common.Types.Directory
+      FileCollector.Common.Types.User
+      FileCollector.Common.Types.Credential
   build-depends:
       base ^>= 4.11
     , aeson ^>= 1.3.1.1
     , servant ^>= 0.14.1
     , text ^>= 1.2
     , time ^>= 1.8
+    , lens

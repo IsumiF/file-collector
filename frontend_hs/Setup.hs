@@ -38,6 +38,7 @@ customBuildHook pkgDescr localBi hooks flags = do
     buildHook simpleUserHooks pkgDescr localBi hooks flags
     let destDir = staticFilesDest (LocalBuildInfo.buildDir localBi) executableName
     let verbosity = fromFlagOrDefault Verbosity.normal (buildVerbosity flags)
+    putStrLn destDir
     copyDirectoryRecursive verbosity "static" destDir
 
 staticFilesDest :: FilePath -- ^build dir
