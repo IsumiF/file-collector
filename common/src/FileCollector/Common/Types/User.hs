@@ -13,7 +13,8 @@ import           Data.Text    (Text)
 data User = User
   { _user_name :: Text
   , _user_role :: Role
-  }
+  , _user_preferredLanguage :: Text
+  } deriving Show
 
 data Role = RoleUploader | RoleCollector | RoleAdmin
   deriving (Show, Eq)

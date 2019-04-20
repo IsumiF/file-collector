@@ -3,8 +3,8 @@ module FileCollector.Frontend.UI.Uploader
   ) where
 
 import           Control.Monad.Reader
-import           FileCollector.Frontend.AppEnv
+import           FileCollector.Frontend.Environment.UserEnv
 import           Reflex.Dom
 
-uploaderPage :: MonadWidget t m => ReaderT AppEnv m ()
+uploaderPage :: MonadWidget t m => ReaderT UserEnv m ()
 uploaderPage = undefined

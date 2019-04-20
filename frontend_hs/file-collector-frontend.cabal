@@ -29,9 +29,13 @@ library
   exposed-modules:
       FileCollector.Frontend.Main
     , FileCollector.Frontend.Utils
-    , FileCollector.Frontend.AppEnv
+    , FileCollector.Frontend.Environment.BasicEnv
+    , FileCollector.Frontend.Environment.UserEnv
+    , FileCollector.Frontend.Environment.UserConfig
     , FileCollector.Frontend.UI.Login
     , FileCollector.Frontend.UI.Uploader
+    , FileCollector.Frontend.Message
+    , FileCollector.Frontend.Monad.Language
   build-depends:
       base ^>= 4.11
     , file-collector-common
@@ -48,6 +52,8 @@ library
     , lens ^>= 4.16.1
     , mtl
     , transformers
+    , data-default
+    , shakespeare
   c-sources:
       csrc/current_path.c
 
