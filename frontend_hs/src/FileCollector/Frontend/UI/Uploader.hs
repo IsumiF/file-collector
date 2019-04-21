@@ -6,5 +6,5 @@ import           Control.Monad.Reader
 import           FileCollector.Frontend.Environment.UserEnv
 import           Reflex.Dom
 
-uploaderPage :: MonadWidget t m => ReaderT UserEnv m ()
+uploaderPage :: MonadWidget t m => ReaderT (UserEnv t) m ()
 uploaderPage = undefined

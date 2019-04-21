@@ -1,6 +1,7 @@
-{-# LANGUAGE OverloadedLists   #-}
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE RecursiveDo       #-}
+{-# LANGUAGE OverloadedLists     #-}
+{-# LANGUAGE OverloadedStrings   #-}
+{-# LANGUAGE RecursiveDo         #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 
 module FileCollector.Frontend.Main
   ( jsmMain
@@ -15,8 +16,7 @@ import           Reflex.Dom.Main                               (mainWidgetWithHe
 import           Servant.Common.BaseUrl                        (BaseUrl (BaseFullUrl),
                                                                 Scheme (Http))
 
-import           FileCollector.Frontend.Environment.BasicEnv
-import           FileCollector.Frontend.Environment.UserConfig
+import           FileCollector.Frontend.Environment.UserEnv
 import           FileCollector.Frontend.UI.Login               (loginWidget)
 
 jsmMain :: JSM ()
@@ -60,14 +60,9 @@ bodyElement = do
     , ("crossorigin", "anonymous")
     ] blank
 
-primaryWidget :: MonadWidget t m => m ()
+primaryWidget :: forall t m. MonadWidget t m => m ()
 primaryWidget = do
-  let basicEnv = def & basicEnv_baseUrl .~ BaseFullUrl Http "127.0.0.1" 8081 "/"
-  runAppStack basicEnv loginWidget
+  -- let basicEnv :: BasicEnv =
+  --       def & basicEnv_baseUrl .~ BaseFullUrl Http "127.0.0.1" 8081 "/"
+  
   pure ()
-
-runAppStack :: MonadWidget t m
-            => r
-            -> StateT UserConfig (ReaderT r m) a
-            -> m a
-runAppStack env m = runReaderT (evalStateT m def) env

@@ -13,11 +13,10 @@ import           Data.Text                                  (Text)
 import           Reflex.Dom
 
 import           FileCollector.Frontend.Environment.UserEnv
-import           FileCollector.Frontend.Monad.Language
+import           FileCollector.Frontend.Monad.Class.Language
 
-loginWidget :: (MonadWidget t m, MonadReader BasicEnv m, MonadHasLanguage m)
-            => m (Dynamic t UserEnv)
--- loginWidget :: forall t m. MonadWidget t m => m ()
+loginWidget :: (MonadWidget t m, MonadReader env m, HasLanguage env t)
+            => m (Dynamic t (UserEnv t))
 loginWidget = do
   elAttr "div" [ ("class", "col-sm-12"), ("style", "text-align: center;") ] $
     elAttr "form" [ ("style", "display: inline-block;") ] $ do

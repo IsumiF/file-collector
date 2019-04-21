@@ -4,18 +4,24 @@
 module FileCollector.Frontend.Environment.BasicEnv
   ( BasicEnv
   , basicEnv_baseUrl
+  , basicEnv_preference
+  , module FileCollector.Frontend.Environment.Preference
   ) where
 
 import           Control.Lens
 import           Data.Default
-import           Data.Text      (Text)
-import           Servant.Reflex (BaseUrl (BasePath))
+import           Data.Text                                     (Text)
+import           Reflex.Dom
+import           Servant.Reflex                                (BaseUrl (BasePath))
 
-data BasicEnv = BasicEnv
+import           FileCollector.Frontend.Environment.Preference
+
+data BasicEnv t = BasicEnv
   { _basicEnv_baseUrl    :: BaseUrl
-  } deriving Show
+  , _basicEnv_preference :: Dynamic t Preference
+  }
 
 makeLenses ''BasicEnv
 
-instance Default BasicEnv where
-  def = BasicEnv (BasePath "/")
+instance Reflex t => Default (BasicEnv t) where
+  def = BasicEnv (BasePath "/") (constDyn def)

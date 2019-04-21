@@ -1,8 +1,8 @@
 resolver: lts-12.26
-# compiler: ghc-8.6.4
 packages:
-- frontend_hs
 - common
+- frontend_hs
+- backend_hs
 extra-deps:
 - jsaddle-0.9.6.0
 - jsaddle-warp-0.9.6.0

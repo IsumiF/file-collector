@@ -2,7 +2,7 @@
 
 module FileCollector.Frontend.Environment.UserEnv
   ( UserEnv
-  , mkUserEnv
+  , newUserEnv
   , userEnv_basicEnv
   , userEnv_user
   , userEnv_credential
@@ -12,20 +12,21 @@ module FileCollector.Frontend.Environment.UserEnv
   ) where
 
 import           Control.Lens
-import           FileCollector.Common.Types.Credential (Credential)
-import           FileCollector.Common.Types.User       (User)
-import           FileCollector.Frontend.Environment.BasicEnv(BasicEnv)
 
-data UserEnv = UserEnv
-  { _userEnv_basicEnv   :: BasicEnv
+import           FileCollector.Common.Types.Credential
+import           FileCollector.Common.Types.User
+import           FileCollector.Frontend.Environment.BasicEnv
+
+data UserEnv t = UserEnv
+  { _userEnv_basicEnv   :: BasicEnv t
   , _userEnv_user       :: User
   , _userEnv_credential :: Credential
-  } deriving Show
+  }
 
 makeLenses ''UserEnv
 
-mkUserEnv :: User
-          -> Credential
-          -> BasicEnv
-          -> UserEnv
-mkUserEnv user credential basicEnv = UserEnv basicEnv user credential
+newUserEnv :: User
+           -> Credential
+           -> BasicEnv t
+           -> UserEnv t
+newUserEnv user credential basicEnv = UserEnv basicEnv user credential

@@ -29,13 +29,14 @@ library
   exposed-modules:
       FileCollector.Frontend.Main
     , FileCollector.Frontend.Utils
+    , FileCollector.Frontend.Message
     , FileCollector.Frontend.Environment.BasicEnv
     , FileCollector.Frontend.Environment.UserEnv
-    , FileCollector.Frontend.Environment.UserConfig
+    , FileCollector.Frontend.Environment.Preference
+    , FileCollector.Frontend.Monad.Class.Language
     , FileCollector.Frontend.UI.Login
     , FileCollector.Frontend.UI.Uploader
-    , FileCollector.Frontend.Message
-    , FileCollector.Frontend.Monad.Language
+    , FileCollector.Frontend.UI.LanguageChooser
   build-depends:
       base ^>= 4.11
     , file-collector-common

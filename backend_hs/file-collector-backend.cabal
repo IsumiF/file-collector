@@ -1,4 +1,4 @@
-cabal-version:       2.4
+cabal-version:       2.2
 name:                file-collector-backend
 version:             0.1.0.0
 synopsis:            Server for file-collector
@@ -9,13 +9,12 @@ license:             BSD-3-Clause
 license-file:        LICENSE
 author:              Isumi Feng
 maintainer:          contact@zelinf.net
--- copyright:
+copyright:           Isumi Feng, Lagrand, Joyce Du, cwy
 category:            Web
-extra-source-files:  CHANGELOG.md
 
 common base
   build-depends:
-      base ^>= 4.12
+      base ^>= 4.11
   default-language: Haskell2010
   ghc-options: -Wall
 
@@ -49,16 +48,16 @@ library
       servant >= 0.14 && < 0.16
     , servant-server >= 0.14 && < 0.16
     , warp >= 3.2.25 && < 3.3
-    , persistent >= 2.9.0 && < 2.10
+    , persistent ^>= 2.8.2
     , persistent-template >= 2.5.4 && < 2.6
-    , persistent-sqlite >= 2.9.0 && < 2.10
+    , persistent-sqlite ^>= 2.8.2
     , resource-pool >= 0.2.3 && < 0.3
     , text >= 1.2.3 && < 1.3
     , bytestring >= 0.10.8 && < 0.11
     , time >= 1.8.0 && < 1.9
-    , aeson >= 1.4.2 && < 1.5
+    , aeson ^>= 1.3.1.1
     , monad-logger >= 0.3.30 && < 0.4
-    , lens >= 4.17 && < 4.18
+    , lens ^>= 4.16.1
     , mtl >= 2.2.2 && < 2.3
     , transformers >= 0.5.5 && < 0.6
     , memory ^>= 0.14.18
