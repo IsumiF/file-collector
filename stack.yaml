@@ -1,8 +1,8 @@
 resolver: lts-12.26
 packages:
 - common
-- frontend_hs
-- backend_hs
+- frontend
+- backend
 extra-deps:
 - jsaddle-0.9.6.0
 - jsaddle-warp-0.9.6.0

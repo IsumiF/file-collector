@@ -1,8 +1,9 @@
 compiler: ghc
 
 packages:
-  ./frontend_hs
   ./common
+  ./frontend
+  ./backend
 
 package reflex-dom
   flags: +use-warp -webkit2gtk

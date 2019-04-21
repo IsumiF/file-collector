@@ -1,8 +1,8 @@
 compiler: ghcjs
 
 packages:
-  ./frontend_hs
   ./common
+  ./frontend
 
 constraints: unix      installed
            , directory installed
