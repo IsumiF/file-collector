@@ -3,9 +3,11 @@ module FileCollector.Frontend.UI.Component.Button
   , buttonClassAttr
   ) where
 
-import Data.Map.Strict (Map)
-import Data.Text(Text)
-import qualified Data.Map.Strict as Map
+import           Data.Map.Strict                          (Map)
+import           Data.Text                                (Text)
+import           Reflex.Dom
+
+import           FileCollector.Frontend.UI.Component.Util (replaceAttrClass)
 
 buttonAttr :: DomBuilder t m
            => Map Text Text -- ^attributes
@@ -21,4 +23,4 @@ buttonClassAttr :: DomBuilder t m
                 -> m a
                 -> m (Event t (), a)
 buttonClassAttr classes attributes =
-  buttonAttr (Map.insert "class" classes attributes)
+  buttonAttr (replaceAttrClass classes attributes)

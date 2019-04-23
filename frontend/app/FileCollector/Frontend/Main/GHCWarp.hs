@@ -27,7 +27,9 @@ data Options =
 main :: IO ()
 main = do
     appPath <- currentPath
-    (Options port resourceRoot) <- Opt.execParser (optionsParserInfo (takeDirectory appPath))
+    let defaultResourceRoot = takeDirectory appPath </> "static"
+    (Options port resourceRoot) <- Opt.execParser
+      (optionsParserInfo defaultResourceRoot)
     putStrLn $ "Running on port " ++ show port
     putStrLn $ "Resource root: " ++ resourceRoot
     runWithDirectory port resourceRoot jsmMain
