@@ -8,15 +8,15 @@ module FileCollector.Frontend.UI.Login
   ) where
 
 import           Control.Monad.Reader
-import           Data.Map.Strict                            (Map)
-import           Data.Text                                  (Text)
+import           Data.Map.Strict                             (Map)
+import           Data.Text                                   (Text)
 import           Reflex.Dom
 
-import           FileCollector.Frontend.Environment.UserEnv
-import           FileCollector.Frontend.Monad.Class.Language
+import           FileCollector.Common.Types.UserInfo
+import           FileCollector.Frontend.Class.Language
 
 loginWidget :: (MonadWidget t m, MonadReader env m, HasLanguage env t)
-            => m (Dynamic t (UserEnv t))
+            => m (Dynamic t UserInfo)
 loginWidget = do
   elAttr "div" [ ("class", "col-sm-12"), ("style", "text-align: center;") ] $
     elAttr "form" [ ("style", "display: inline-block;") ] $ do

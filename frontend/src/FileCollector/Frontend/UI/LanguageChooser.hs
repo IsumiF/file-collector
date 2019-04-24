@@ -1,9 +1,9 @@
-{-# LANGUAGE OverloadedStrings #-}
-
 module FileCollector.Frontend.UI.LanguageChooser
   ( languageChooser
   ) where
 
+import           Data.Foldable                              (traverse_)
+import           Data.Map.Strict                            (Map)
 import           Data.Text                                  (Text)
 import           Reflex.Dom
 
@@ -12,14 +12,13 @@ import           FileCollector.Frontend.UI.Component.Button (buttonAttr,
 import           FileCollector.Frontend.UI.Component.Div    (divAttr,
                                                              divClassAttr)
 
-languageChooser :: DomBuilder t m
-                => Text -- ^default language code
-                -> [(Text, Text)] -- ^supported language codes and their labels
-                -> m (Dynamic t Text)
-languageChooser defLang langsWithLabels = do
-    divAttr ("id" =: "LanguageChooser_rootDiv") $ do
-      el "select" $ do
-        el "option" $ text "First option"
-        el "option" $ text "Second option"
-    pure undefined
-      
+languageChooser :: MonadWidget t m
+                => m (Dynamic t Text)
+languageChooser = do
+    divAttr ("id" =: "LanguageChooser_root") $ do
+      e <- dropdown defLang (constDyn langsWithLabels) def
+      pure $ value e
+  where
+    defLang = "zh-CN"
+    langsWithLabels = [("en-US", "English (United States)"), ("zh-CN", "中文简体")]
+

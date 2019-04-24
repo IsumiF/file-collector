@@ -10,16 +10,15 @@ module FileCollector.Frontend.Main
 import           Control.Lens
 import           Control.Monad.Reader
 import           Control.Monad.State.Strict
-import           Language.Javascript.JSaddle.Types          (JSM)
-import           Reflex.Dom                                 hiding
-                                                             (mainWidgetWithHead)
-import           Reflex.Dom.Main                            (mainWidgetWithHead)
-import           Servant.Common.BaseUrl                     (BaseUrl (BaseFullUrl),
-                                                             Scheme (Http))
+import           Data.Default                      (def)
+import           Language.Javascript.JSaddle.Types (JSM)
+import           Reflex.Dom                        hiding (mainWidgetWithHead)
+import           Reflex.Dom.Main                   (mainWidgetWithHead)
+import           Servant.Common.BaseUrl            (BaseUrl (BaseFullUrl),
+                                                    Scheme (Http))
 
-import           FileCollector.Frontend.Environment.UserEnv
-import           FileCollector.Frontend.UI.LanguageChooser  (languageChooser)
-import           FileCollector.Frontend.UI.Login            (loginWidget)
+import           FileCollector.Frontend.AppEnv
+import           FileCollector.Frontend.UI.TopBar  (topBar)
 
 jsmMain :: JSM ()
 jsmMain = mainWidgetWithHead headElement bodyElement
@@ -33,13 +32,20 @@ headElement = do
     ) blank
   elAttr "link" (("rel" =: "stylesheet") <> ("href" =: "styles/all.css")) blank
 
-bodyElement :: DomBuilder t m => m ()
-bodyElement =
+bodyElement :: MonadWidget t m => m ()
+bodyElement = do
   primaryWidget
+-- <script defer src="https://use.fontawesome.com/releases/v5.3.1/js/all.js"></script>
+  elAttr "script"
+    ( "src" =: "https://use.fontawesome.com/releases/v5.3.1/js/all.js"
+   <> "defer" =: "defer"
+    ) blank
 
-primaryWidget :: forall t m. DomBuilder t m => m ()
-primaryWidget = do
-  -- let basicEnv :: BasicEnv =
-  --       def & basicEnv_baseUrl .~ BaseFullUrl Http "127.0.0.1" 8081 "/"
-  languageChooser undefined undefined
-  pure ()
+primaryWidget :: forall t m. MonadWidget t m => m ()
+primaryWidget = mdo
+    (langDyn, _) <- elClass "div" "container" $ runReaderT topBar appEnv
+  
+    let appEnv :: AppEnv t =
+          def & appEnv_baseUrl .~ BaseFullUrl Http "127.0.0.1" 8080 "/api/"
+              & appEnv_language .~ langDyn
+    pure ()

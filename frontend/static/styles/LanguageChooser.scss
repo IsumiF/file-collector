@@ -1,7 +1,0 @@
-@charset "UTF-8";
-@import "bulma/sass/utilities/_all.sass";
-@import "bulma/sass/elements/form.sass";
-
-#LanguageChooser_rootDiv {
-  @extend .select;
-}

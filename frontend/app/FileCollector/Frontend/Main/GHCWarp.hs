@@ -6,18 +6,20 @@ module FileCollector.Frontend.Main.GHCWarp
   ( main
   ) where
 
-import           FileCollector.Frontend.Main            (jsmMain)
-import           FileCollector.Frontend.Utils           (currentPath)
 import           Language.Javascript.JSaddle.Run        (syncPoint)
 import           Language.Javascript.JSaddle.Types      (JSM)
 import           Language.Javascript.JSaddle.WebSockets (jsaddleApp, jsaddleOr)
 import qualified Network.Wai                            as Wai
 import           Network.Wai.Application.Static         (defaultWebAppSettings,
-                                                         staticApp)
+                                                         ssMaxAge, staticApp)
 import qualified Network.Wai.Handler.Warp               as Warp (run)
 import           Network.WebSockets.Connection          (defaultConnectionOptions)
+import qualified Options.Applicative                    as Opt
 import           System.FilePath                        (takeDirectory, (</>))
-import qualified Options.Applicative as Opt
+import           WaiAppStatic.Types                     (MaxAge (MaxAgeSeconds))
+
+import           FileCollector.Frontend.Main            (jsmMain)
+import           FileCollector.Frontend.Utils           (currentPath)
 
 data Options =
   Options
@@ -61,7 +63,10 @@ optionsParserInfo defResourceRoot =
 runWithDirectory :: Int -> FilePath -> JSM () -> IO ()
 runWithDirectory port dir jsm = do
     jsApp <- jsaddleOr defaultConnectionOptions (jsm >> syncPoint) jsaddleApp
-    let staticApp' = staticApp (defaultWebAppSettings dir)
+    let webAppSettings = (defaultWebAppSettings dir)
+          { ssMaxAge = MaxAgeSeconds 0
+          }
+        staticApp' = staticApp webAppSettings
     Warp.run port $ \request respond ->
       (case Wai.pathInfo request of
         []             -> jsApp

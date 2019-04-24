@@ -31,17 +31,19 @@ library
       -Wno-simplifiable-class-constraints
   default-extensions:
       OverloadedStrings
+      OverloadedLists
+      ScopedTypeVariables
   exposed-modules:
       FileCollector.Frontend.Main
     , FileCollector.Frontend.Utils
     , FileCollector.Frontend.Message
-    , FileCollector.Frontend.Environment.BasicEnv
-    , FileCollector.Frontend.Environment.UserEnv
-    , FileCollector.Frontend.Environment.Preference
-    , FileCollector.Frontend.Monad.Class.Language
+    , FileCollector.Frontend.AppEnv
+    , FileCollector.Frontend.Class.Language
+    , FileCollector.Frontend.Class.User
     , FileCollector.Frontend.UI.Login
-    , FileCollector.Frontend.UI.Uploader
+    , FileCollector.Frontend.UI.TopBar
     , FileCollector.Frontend.UI.LanguageChooser
+    , FileCollector.Frontend.UI.UserControl
     , FileCollector.Frontend.UI.Component.Util
     , FileCollector.Frontend.UI.Component.Button
     , FileCollector.Frontend.UI.Component.Div
