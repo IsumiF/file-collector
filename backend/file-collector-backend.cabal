@@ -27,25 +27,19 @@ library
   import: base
   hs-source-dirs: src
   exposed-modules:
-      Isumi.FileCollector.Api
-    , Isumi.FileCollector.Api.User
-    , Isumi.FileCollector.Api.Directory
-    , Isumi.FileCollector.Api.Internal.Prelude
-    , Isumi.FileCollector.Server
-    , Isumi.FileCollector.Server.Handler
-    , Isumi.FileCollector.Server.Handler.User
-    , Isumi.FileCollector.Server.Handler.Internal.Prelude
-    , Isumi.FileCollector.Server.SqlConnPool
-    , Isumi.FileCollector.Server.Auth
-    , Isumi.FileCollector.Server.Password
-    , Isumi.FileCollector.Server.Persist
-    , Isumi.FileCollector.Server.Persist.Prelude
-    , Isumi.FileCollector.Server.Persist.Entity
-    , Isumi.FileCollector.Server.Persist.Entity.Role
-    , Isumi.FileCollector.Server.Persist.Entity.FileLocation
-    , Isumi.FileCollector.Server.Persist.User
+      FileCollector.Backend.Main
+      FileCollector.Backend.App
+      FileCollector.Backend.Handler.AppHandler
+      FileCollector.Backend.Handler.Impl.User
+      FileCollector.Backend.Database.Types.Internal
+      FileCollector.Backend.Database.Types.User
+      FileCollector.Backend.Database.Types.Role
+      FileCollector.Backend.Database.Class.MonadConnection
+      FileCollector.Backend.Database.Class.MonadUser
+      FileCollector.Backend.Core.User
   build-depends:
-      servant >= 0.14 && < 0.16
+      file-collector-common
+    , servant >= 0.14 && < 0.16
     , servant-server >= 0.14 && < 0.16
     , warp >= 3.2.25 && < 3.3
     , persistent ^>= 2.8.2
@@ -64,41 +58,10 @@ library
     , cryptonite >= 0.25 && < 0.26
     , data-default ^>= 0.7.1
     , optparse-applicative ^>= 0.14.3
+    , monad-control
+    , transformers-base
 
 executable server
   import: exe-base
   hs-source-dirs: app
   main-is: Server.hs
-
-test-suite inttest
-  import: exe-base
-  type: exitcode-stdio-1.0 
-  main-is: Main.hs
-  hs-source-dirs: test/int
-  other-modules:
-      Spec
-    , Isumi.FileCollector.IntTest.Client.Util
-    , Isumi.FileCollector.IntTest.Client.UserSpec
-    , Isumi.FileCollector.IntTest.DbGen.Simple
-  build-depends:
-      hspec
-    , hspec-core
-    , QuickCheck
-    , servant
-    , servant-client
-    , persistent
-    , persistent-sqlite
-    , text
-    , time
-    , warp
-    , data-default
-    , temporary 
-    , directory
-    , async
-    , http-client
-    , mtl
-    , transformers
-    , http-types
-  build-tool-depends:
-      hspec-discover:hspec-discover
-
