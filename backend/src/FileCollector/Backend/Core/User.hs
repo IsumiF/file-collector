@@ -3,6 +3,7 @@
 
 module FileCollector.Backend.Core.User
   ( getUserByName
+  , userDbToCommon
   ) where
 
 import Control.Monad.Reader

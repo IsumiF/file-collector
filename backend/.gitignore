@@ -1,3 +1,5 @@
 dist*/
 .ghc.environment.*
 .stack-work/
+/config/prod.json
+/devres/

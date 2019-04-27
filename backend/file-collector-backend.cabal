@@ -29,14 +29,20 @@ library
   exposed-modules:
       FileCollector.Backend.Main
       FileCollector.Backend.App
+      FileCollector.Backend.Config
+      FileCollector.Backend.Database
+      FileCollector.Backend.Handler
       FileCollector.Backend.Handler.AppHandler
+      FileCollector.Backend.Handler.Auth
       FileCollector.Backend.Handler.Impl.User
       FileCollector.Backend.Database.Types.Internal
       FileCollector.Backend.Database.Types.User
       FileCollector.Backend.Database.Types.Role
       FileCollector.Backend.Database.Class.MonadConnection
       FileCollector.Backend.Database.Class.MonadUser
+      FileCollector.Backend.Core.BasicAuth
       FileCollector.Backend.Core.User
+      FileCollector.Backend.Core.Password
   build-depends:
       file-collector-common
     , servant >= 0.14 && < 0.16

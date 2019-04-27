@@ -7,12 +7,13 @@
 module FileCollector.Backend.App
   ( App
   , runApp
-  , AppEnv(..)
+  , AppEnv
+  , makeAppEnv
   , appEnv_sqlConnPool
   ) where
 
 import Control.Lens
-import Control.Monad.Base (MonadBase, liftBase)
+import Control.Monad.Base (MonadBase)
 import Control.Monad.IO.Class (MonadIO)
 import Control.Monad.Reader
 import Control.Monad.Trans.Control
@@ -23,6 +24,10 @@ import Database.Persist.Sql (SqlBackend)
 data AppEnv = AppEnv
   { _appEnv_sqlConnPool :: Pool SqlBackend
   }
+
+makeAppEnv :: Pool SqlBackend
+           -> AppEnv
+makeAppEnv = AppEnv
 
 makeLenses ''AppEnv
 
