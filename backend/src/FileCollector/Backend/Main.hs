@@ -8,6 +8,7 @@ module FileCollector.Backend.Main
 
 import           Control.Lens hiding (Context)
 import           Control.Monad.Logger (runStdoutLoggingT)
+import           Data.Coerce (coerce)
 import           Data.Pool (Pool)
 import           Data.Proxy (Proxy (Proxy))
 import           Database.Persist.Sql (SqlBackend)
@@ -23,10 +24,12 @@ import           FileCollector.Backend.Config
 import qualified FileCollector.Backend.Database as Database (initialize)
 import           FileCollector.Backend.Handler
     (handler, makeAuthCheck, toHandler)
+import           FileCollector.Backend.Logger (withLogStdout)
 import           FileCollector.Common.Api (Api)
 import           FileCollector.Common.Api.Auth
     (UserAdmin, UserCollector, UserUploader)
 
+-- | Entry point of the server
 main :: IO ()
 main = do
     option <- Opt.execParser parserInfo
@@ -38,9 +41,10 @@ main = do
       Just config -> do
         sqlPool :: Pool SqlBackend <- runStdoutLoggingT $
           createSqlitePool (config ^. config_dbConnStr) 10
-        let appEnv = makeAppEnv sqlPool
-        runApp Database.initialize appEnv
-        Warp.run (config ^. config_port) (makeApplication appEnv)
+        withLogStdout (coerce (config ^. config_logLevel)) $ \logger -> do
+          let appEnv = makeAppEnv sqlPool logger
+          runApp Database.initialize appEnv
+          Warp.run (config ^. config_port) (makeApplication appEnv)
 
 data Option = Option
   { option_configFile :: FilePath

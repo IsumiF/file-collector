@@ -1,5 +1,8 @@
 module FileCollector.Backend.Handler
-  ( handler
+  (
+  -- *Primary Handler
+    handler
+  -- *Utilities
   , toHandler
   , makeAuthCheck
   ) where
@@ -12,5 +15,6 @@ import           FileCollector.Backend.Handler.Auth (makeAuthCheck)
 import qualified FileCollector.Backend.Handler.Impl.User as User
 import           FileCollector.Common.Api (Api)
 
+-- |Handler to 'Api'
 handler :: ServerT Api AppHandler
 handler = User.handler

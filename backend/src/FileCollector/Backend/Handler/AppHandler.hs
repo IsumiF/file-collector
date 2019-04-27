@@ -12,8 +12,10 @@ import Servant.Server
 
 import FileCollector.Backend.App (App, AppEnv, runApp)
 
+-- | The monad that all handler code run in
 type AppHandler = ExceptT ServantErr App
 
+-- | Convert 'AppHandler' monad to Servant's 'Handler' monad
 toHandler :: AppEnv -> AppHandler a -> Handler a
 toHandler appEnv appHandler = do
   resultEither <- liftIO $ runApp (runExceptT appHandler) appEnv
