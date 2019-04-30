@@ -9,7 +9,6 @@ module FileCollector.Frontend.Main
 
 import           Control.Lens
 import           Control.Monad.Reader
-import           Control.Monad.State.Strict
 import           Data.Default                      (def)
 import           Language.Javascript.JSaddle.Types (JSM)
 import           Reflex.Dom                        hiding (mainWidgetWithHead)
@@ -44,7 +43,7 @@ bodyElement = do
 primaryWidget :: forall t m. MonadWidget t m => m ()
 primaryWidget = mdo
     (langDyn, _) <- elClass "div" "container" $ runReaderT topBar appEnv
-  
+
     let appEnv :: AppEnv t =
           def & appEnv_baseUrl .~ BaseFullUrl Http "127.0.0.1" 8080 "/api/"
               & appEnv_language .~ langDyn

@@ -7,7 +7,6 @@ module FileCollector.Frontend.Class.Language
   ) where
 
 import           Control.Lens
-import           Control.Monad.State.Strict
 import           Data.Text                     (Text)
 import           Reflex.Dom
 

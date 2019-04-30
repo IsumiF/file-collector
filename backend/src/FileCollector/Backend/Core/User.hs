@@ -28,6 +28,7 @@ getUserByName name = do
     maybeDbUser <- Db.withConnection $ Db.getUserByName name
     pure $ userDbToCommon <$> maybeDbUser
 
+-- | Convert database user to common user, discarding password
 userDbToCommon :: Db.User -> User
 userDbToCommon dbUser = User
     (Db.userName dbUser)

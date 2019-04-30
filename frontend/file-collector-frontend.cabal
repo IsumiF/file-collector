@@ -35,24 +35,26 @@ library
       ScopedTypeVariables
   exposed-modules:
       FileCollector.Frontend.Main
-    , FileCollector.Frontend.Utils
-    , FileCollector.Frontend.Message
-    , FileCollector.Frontend.AppEnv
-    , FileCollector.Frontend.Class.Language
-    , FileCollector.Frontend.Class.User
-    , FileCollector.Frontend.UI.Login
-    , FileCollector.Frontend.UI.TopBar
-    , FileCollector.Frontend.UI.LanguageChooser
-    , FileCollector.Frontend.UI.UserControl
-    , FileCollector.Frontend.UI.Component.Util
-    , FileCollector.Frontend.UI.Component.Button
-    , FileCollector.Frontend.UI.Component.Div
+      FileCollector.Frontend.Utils
+      FileCollector.Frontend.Message
+      FileCollector.Frontend.AppEnv
+      FileCollector.Frontend.Types.LoggedUser
+      FileCollector.Frontend.Class.Language
+      FileCollector.Frontend.Class.User
+      FileCollector.Frontend.UI.Login
+      FileCollector.Frontend.UI.TopBar
+      FileCollector.Frontend.UI.LanguageChooser
+      FileCollector.Frontend.UI.UserControl
+      FileCollector.Frontend.UI.Component.Util
+      FileCollector.Frontend.UI.Component.Button
+      FileCollector.Frontend.UI.Component.Div
   build-depends:
       base ^>= 4.11
     , file-collector-common
     , aeson ^>= 1.3.1.1
     , containers ^>= 0.5.11
     , jsaddle ^>= 0.9.6.0
+    , jsaddle-dom
     , reflex ^>= 0.5.0.1
     , reflex-dom ^>= 0.4
     , reflex-dom-core ^>= 0.4

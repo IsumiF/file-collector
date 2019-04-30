@@ -10,8 +10,10 @@ module FileCollector.Common.Types.User
 
 import           Control.Lens
 import           Data.Aeson
-import           Data.Text    (Text)
-import           GHC.Generics (Generic)
+import           Data.Text                        (Text)
+import           GHC.Generics                     (Generic)
+
+import           FileCollector.Common.Utils.Aeson (lensDefaultOptions)
 
 data User = User
   { _user_name :: Text
@@ -22,9 +24,11 @@ data Role = RoleUploader | RoleCollector | RoleAdmin
   deriving (Show, Eq, Generic)
 
 instance ToJSON User where
-  toEncoding = genericToEncoding defaultOptions
+  toJSON = genericToJSON lensDefaultOptions
+  toEncoding = genericToEncoding lensDefaultOptions
 
-instance FromJSON User
+instance FromJSON User where
+  parseJSON = genericParseJSON lensDefaultOptions
 
 instance ToJSON Role where
   toEncoding = genericToEncoding defaultOptions

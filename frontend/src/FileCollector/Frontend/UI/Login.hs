@@ -8,26 +8,26 @@ module FileCollector.Frontend.UI.Login
   ) where
 
 import           Control.Monad.Reader
-import           Data.Map.Strict                             (Map)
-import           Data.Text                                   (Text)
+import           Data.Map.Strict                         (Map)
+import           Data.Text                               (Text)
 import           Reflex.Dom
 
-import           FileCollector.Common.Types.UserInfo
 import           FileCollector.Frontend.Class.Language
+import           FileCollector.Frontend.Types.LoggedUser
 
 loginWidget :: (MonadWidget t m, MonadReader env m, HasLanguage env t)
-            => m (Dynamic t UserInfo)
-loginWidget = do
+            => m (Dynamic t LoggedUser)
+loginWidget =
   elAttr "div" [ ("class", "col-sm-12"), ("style", "text-align: center;") ] $
     elAttr "form" [ ("style", "display: inline-block;") ] $ do
       let dynAttrFormControl = constDyn [("class", "form-control")]
-      elClass "div" "form-group" $ do
+      elClass "div" "form-group" $
         elAttr "label" [ ("style", "text-align: left;") ] $ do
           text "Username"
           usernameInput <- textInput $
             def & textInputConfig_attributes .~ dynAttrFormControl
           pure ()
-      elClass "div" "form-group" $ do
+      elClass "div" "form-group" $
         elAttr "label" [ ("style", "text-align: left;") ] $ do
           text "Password"
           passwordInput <- textInput $

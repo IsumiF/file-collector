@@ -41,6 +41,8 @@ library
       FileCollector.Backend.Database.Types.Role
       FileCollector.Backend.Database.Class.MonadConnection
       FileCollector.Backend.Database.Class.MonadUser
+      FileCollector.Backend.Oss.Class.MonadOssServer
+      FileCollector.Backend.Oss.Aliyun
       FileCollector.Backend.Core.BasicAuth
       FileCollector.Backend.Core.User
       FileCollector.Backend.Core.Password

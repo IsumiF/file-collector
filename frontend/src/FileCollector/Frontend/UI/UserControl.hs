@@ -6,8 +6,6 @@ module FileCollector.Frontend.UI.UserControl
   ) where
 
 import           Control.Monad.Reader
-import           Data.Functor                               (void)
-import           Data.Map.Strict                            (Map)
 import           Data.Text                                  (Text)
 import           Reflex.Dom
 

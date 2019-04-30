@@ -21,6 +21,8 @@ import Data.Aeson
 import Data.Text (Text)
 import GHC.Generics (Generic)
 
+import FileCollector.Common.Utils.Aeson (removeFieldNs)
+
 -- |Server initial configuration
 data Config = Config
   { -- | Port
@@ -53,10 +55,7 @@ makeLenses ''Config
 
 instance FromJSON Config where
   parseJSON = genericParseJSON defaultOptions
-    { fieldLabelModifier = removeFieldNs}
-
-removeFieldNs :: String -> String
-removeFieldNs = tail . dropWhile (/= '_') . tail
+    { fieldLabelModifier = removeFieldNs }
 
 -- |Read configuration from file. Returns Nothing if any error occur.
 --
