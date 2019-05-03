@@ -1,7 +1,10 @@
+{-# LANGUAGE CPP                 #-}
 {-# LANGUAGE FlexibleContexts    #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 
 module Main where
+
+#ifndef ghcjs_HOST_OS
 
 import           Data.Proxy                                        (Proxy (..))
 import qualified Data.Text.IO                                      as TIO
@@ -31,3 +34,10 @@ apiDocs _ = docs (Proxy :: Proxy (Api ossProvider))
 
 instance Docs.ToSample () where
   toSamples _ = Docs.noSamples
+
+#else
+
+main :: IO ()
+main = putStrLn "Not runnable on ghcjs"
+
+#endif
