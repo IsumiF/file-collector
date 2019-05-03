@@ -1,6 +1,7 @@
-{-# LANGUAGE AllowAmbiguousTypes #-}
-{-# LANGUAGE DataKinds           #-}
-{-# LANGUAGE TypeOperators       #-}
+{-# LANGUAGE AllowAmbiguousTypes   #-}
+{-# LANGUAGE DataKinds             #-}
+{-# LANGUAGE FlexibleInstances     #-}
+{-# LANGUAGE TypeOperators         #-}
 
 module FileCollector.Common.Api.Auth
   ( AuthUploader
@@ -13,6 +14,7 @@ module FileCollector.Common.Api.Auth
   ) where
 
 import           Servant.API
+import qualified Servant.Docs.Internal           as Docs
 
 import           FileCollector.Common.Types.User
 
@@ -49,3 +51,12 @@ instance UserAuthWrapper UserAdmin where
   unWrap (UserAdmin u) = u
   wrap = UserAdmin
   minRole = RoleAdmin
+
+instance Docs.ToAuthInfo (BasicAuth "file-collector" UserUploader) where
+  toAuthInfo _ = Docs.DocAuthentication "uploader" "must be at least uploader"
+
+instance Docs.ToAuthInfo (BasicAuth "file-collector" UserCollector) where
+  toAuthInfo _ = Docs.DocAuthentication "collector" "must be at least collector"
+
+instance Docs.ToAuthInfo (BasicAuth "file-collector" UserAdmin) where
+  toAuthInfo _ = Docs.DocAuthentication "admin" "administrator"

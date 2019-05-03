@@ -1,8 +1,11 @@
-{-# LANGUAGE DeriveGeneric   #-}
-{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE DeriveGeneric              #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE OverloadedStrings          #-}
+{-# LANGUAGE TemplateHaskell            #-}
 
 module FileCollector.Common.Types.File
   ( File(..)
+  , FileName(..)
   -- *Lens
   , file_name
   , file_uploaderName
@@ -12,18 +15,26 @@ module FileCollector.Common.Types.File
 
 import           Control.Lens
 import           Data.Aeson
-import           Data.Text                        (Text)
-import           Data.Time                        (UTCTime)
-import           GHC.Generics                     (Generic)
+import           Data.Text                            (Text)
+import           Data.Time                            (UTCTime (..),
+                                                       fromGregorian)
+import           GHC.Generics                         (Generic)
+import           Servant.API
+import qualified Servant.Docs                         as Docs
 
-import           FileCollector.Common.Utils.Aeson (lensDefaultOptions)
+import           FileCollector.Common.Types.HashValue
+import           FileCollector.Common.Types.User      (UserName (..))
+import           FileCollector.Common.Utils.Aeson     (lensDefaultOptions)
 
 data File = File
-  { _file_name         :: Text
-  , _file_uploaderName :: Text
-  , _file_hash         :: Text
+  { _file_name         :: FileName
+  , _file_uploaderName :: UserName
+  , _file_hash         :: HashValue
   , _file_lastModified :: UTCTime
-  } deriving (Show, Generic)
+  } deriving Generic
+
+newtype FileName = FileName Text
+  deriving (Generic, Show, Eq, FromJSON, ToJSON, FromHttpApiData, ToHttpApiData)
 
 makeLenses ''File
 
@@ -33,3 +44,10 @@ instance FromJSON File where
 instance ToJSON File where
   toJSON = genericToJSON lensDefaultOptions
   toEncoding = genericToEncoding lensDefaultOptions
+
+instance Docs.ToSample File where
+  toSamples _ = Docs.singleSample $ File
+    (FileName "16337060-isumi.tar.gz")
+    (UserName "Isumi Fly")
+    (HashValue "38b8c2c1093dd0fec383a9d9ac940515")
+    (UTCTime (fromGregorian 2019 3 24) 0)

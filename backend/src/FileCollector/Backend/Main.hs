@@ -28,6 +28,7 @@ import           FileCollector.Backend.Logger (withLogStdout)
 import           FileCollector.Common.Api (Api)
 import           FileCollector.Common.Api.Auth
     (UserAdmin, UserCollector, UserUploader)
+import           FileCollector.Common.Types.OssProviderImpl.Aliyun (Aliyun)
 
 -- | Entry point of the server
 main :: IO ()
@@ -70,7 +71,7 @@ makeApplication env =
       context
       (hoistServerWithContext apiProxy contextProxy hoist handler)
   where
-    apiProxy = Proxy :: Proxy Api
+    apiProxy = Proxy :: Proxy (Api Aliyun)
     context = makeContext env
     contextProxy = Proxy :: Proxy HandlerContext
     hoist = toHandler env

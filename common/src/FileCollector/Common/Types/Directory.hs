@@ -1,8 +1,11 @@
-{-# LANGUAGE DeriveGeneric   #-}
-{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE DeriveGeneric              #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE OverloadedStrings          #-}
+{-# LANGUAGE TemplateHaskell            #-}
 
 module FileCollector.Common.Types.Directory
   ( Directory(..)
+  , DirectoryName(..)
   , UploadRule(..)
   -- *Lens
   -- **Directory
@@ -19,19 +22,25 @@ module FileCollector.Common.Types.Directory
 import           Control.Lens
 import           Data.Aeson
 import           Data.Text                        (Text)
-import           Data.Time                        (UTCTime)
+import           Data.Time                        (UTCTime (..), fromGregorian)
 import           Data.Word                        (Word32)
 import           GHC.Generics
+import           Servant.API
+import qualified Servant.Docs                     as Docs
 
+import           FileCollector.Common.Types.User  (UserName (..))
 import           FileCollector.Common.Utils.Aeson (removeFieldNs)
 
 data Directory = Directory
-  { _directory_name           :: Text
-  , _directory_ownerName      :: Text
+  { _directory_name           :: DirectoryName
+  , _directory_ownerName      :: UserName
   -- | Expiration time. @Nothing@ means the directory never expires.
   , _directory_expirationTime :: Maybe UTCTime
   , _directory_uploadRules    :: [UploadRule]
   } deriving (Generic, Show)
+
+newtype DirectoryName = DirectoryName Text
+  deriving (Generic, Show, FromJSON, ToJSON, FromHttpApiData, ToHttpApiData)
 
 data UploadRule =
   -- | maximum file size, in bytes
@@ -60,3 +69,24 @@ instance ToJSON UploadRule where
   toEncoding = genericToEncoding defaultOptions
 
 instance FromJSON UploadRule
+
+instance Docs.ToSample Directory where
+  toSamples _ = Docs.singleSample $
+    Directory
+      (DirectoryName "Statistics")
+      (UserName "TA-01")
+      (Just $ UTCTime (fromGregorian 2019 04 23) 0)
+      sampleRules
+
+instance Docs.ToSample UploadRule where
+  toSamples _ = Docs.samples sampleRules
+
+sampleRules :: [UploadRule]
+sampleRules =
+    [ RuleMaxFileSize (80 * megaBytes)
+    , RuleFileNameFormat "[[:digit:]]{8}-.+\\.[[:alnum:]\\.]+"
+    , RuleMaxFiles 1
+    ]
+
+megaBytes :: Word32
+megaBytes = 1024 * 1024

@@ -31,5 +31,5 @@ getUserByName name = do
 -- | Convert database user to common user, discarding password
 userDbToCommon :: Db.User -> User
 userDbToCommon dbUser = User
-    (Db.userName dbUser)
+    (UserName (Db.userName dbUser))
     ((Db.toCommonRole . Db.userRole) dbUser)
