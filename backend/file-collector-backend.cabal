@@ -39,6 +39,9 @@ library
       FileCollector.Backend.Database.Types.Internal
       FileCollector.Backend.Database.Types.User
       FileCollector.Backend.Database.Types.Role
+      FileCollector.Backend.Database.Types.UploadRule
+      FileCollector.Backend.Database.Types.Directory
+      FileCollector.Backend.Database.Types.File
       FileCollector.Backend.Database.Class.MonadConnection
       FileCollector.Backend.Database.Class.MonadUser
       FileCollector.Backend.Oss.Class.MonadOssServer
@@ -46,6 +49,7 @@ library
       FileCollector.Backend.Core.BasicAuth
       FileCollector.Backend.Core.User
       FileCollector.Backend.Core.Password
+      FileCollector.Backend.Core.Class.Serializable
   build-depends:
       file-collector-common
     , servant >= 0.14 && < 0.16

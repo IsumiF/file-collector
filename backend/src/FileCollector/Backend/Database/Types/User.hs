@@ -1,7 +1,7 @@
 module FileCollector.Backend.Database.Types.User
   ( User(..)
   , UserId
-  , Unique (UniqueName)
+  , Unique (UniqueUserName)
   ) where
 
 import FileCollector.Backend.Database.Types.Internal

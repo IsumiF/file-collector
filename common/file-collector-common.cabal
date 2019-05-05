@@ -27,6 +27,8 @@ library
       FileCollector.Common.Types.DownloadRequest
       FileCollector.Common.Types.OssProvider
       FileCollector.Common.Types.OssProviderImpl.Aliyun
+      FileCollector.Common.Types.Convertible
+      FileCollector.Common.Types.JsonByteString
       FileCollector.Common.Utils.Aeson
   build-depends:
       base ^>= 4.11

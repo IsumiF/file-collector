@@ -10,12 +10,12 @@ import Data.Text (Text)
 import Database.Persist (entityVal, getBy)
 import Database.Persist.Sql (SqlBackend)
 
-import FileCollector.Backend.Database.Types.User (Unique (UniqueName), User)
+import FileCollector.Backend.Database.Types.User (Unique (UniqueUserName), User)
 
 class Monad m => MonadUser m where
   getUserByName :: Text -> m (Maybe User)
 
 instance MonadIO m => MonadUser (ReaderT SqlBackend m) where
   getUserByName name = do
-    maybeEntityUser <- getBy (UniqueName name)
+    maybeEntityUser <- getBy (UniqueUserName name)
     pure $ fmap entityVal maybeEntityUser

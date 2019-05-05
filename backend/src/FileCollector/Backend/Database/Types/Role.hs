@@ -1,7 +1,7 @@
 {-# LANGUAGE TemplateHaskell #-}
 
 module FileCollector.Backend.Database.Types.Role
-  ( Role
+  ( Role(..)
   , toCommonRole
   , fromCommonRole
   ) where

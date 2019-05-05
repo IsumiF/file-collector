@@ -49,5 +49,5 @@ instance Docs.ToSample File where
   toSamples _ = Docs.singleSample $ File
     (FileName "16337060-isumi.tar.gz")
     (UserName "Isumi Fly")
-    (HashValue "38b8c2c1093dd0fec383a9d9ac940515")
+    (HashValue HashTypeMD5 "38b8c2c1093dd0fec383a9d9ac940515")
     (UTCTime (fromGregorian 2019 3 24) 0)
