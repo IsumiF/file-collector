@@ -1,19 +1,21 @@
-# Starter pipeline
-# Start with a minimal pipeline that you can customize to build and deploy your code.
-# Add steps that build, run tests, deploy, and more:
-# https://aka.ms/yaml
-
 trigger:
 - master
 
 pool:
-  vmImage: 'ubuntu-latest'
+  vmImage: 'ubuntu-16.04'
 
 steps:
 - script: |
     mkdir -p ~/.local/bin
     curl -L https://get.haskellstack.org/stable/linux-x86_64.tar.gz | tar xz --wildcards --strip-components=1 -C ~/.local/bin '*/stack'
   displayName: Install Stack
+- script: |
+    sudo npm i -g sass
+  displayName: Install SASS
+- script: |
+    git submodule init
+    git submodule update --recursive
+  displayName: Init Submodule
 - script: |
     export PATH=$HOME/.local/bin:$PATH
     stack --no-terminal --install-ghc test --only-dependencies
