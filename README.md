@@ -1,5 +1,7 @@
 # file-collector
 
+[![Build Status](https://dev.azure.com/IsumiF/file-collector/_apis/build/status/IsumiF.file-collector?branchName=master)](https://dev.azure.com/IsumiF/file-collector/_build/latest?definitionId=1&branchName=master)
+
 A website for uploading and collecting files. One use case is to collect
 students' homework.
 
