@@ -21,6 +21,7 @@ extra-deps:
 - haddock-library-1.7.0
 - hslua-1.0.2
 - hslua-module-text-0.2.0
+- string-interpolate-0.1.0.1
 flags:
   reflex-dom:
     use-warp: true

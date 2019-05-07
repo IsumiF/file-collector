@@ -16,7 +16,7 @@ import           Data.Aeson
 import           GHC.Generics                     (Generic)
 import qualified Servant.Docs                     as Docs
 
-import           FileCollector.Common.Utils.Aeson (lensDefaultOptions)
+import           FileCollector.Common.Base.Aeson (lensDefaultOptions)
 
 class OssProvider provider where
   type Credential provider = a | a -> provider

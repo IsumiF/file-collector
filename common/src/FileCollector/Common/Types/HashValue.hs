@@ -24,9 +24,9 @@ import           GHC.Generics                              (Generic)
 import qualified Servant.Docs                              as Docs
 
 import           Data.Aeson.Types                          (Parser)
-import           FileCollector.Common.Types.Convertible
+import           FileCollector.Common.Base.Convertible
 import           FileCollector.Common.Types.JsonByteString
-import           FileCollector.Common.Utils.Aeson          (lensDefaultOptions)
+import           FileCollector.Common.Base.Aeson          (lensDefaultOptions)
 
 data HashValue = HashValue
   { _hashValue_type :: HashType

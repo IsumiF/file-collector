@@ -19,7 +19,7 @@ import           GHC.Generics                     (Generic)
 import           Servant.API
 import qualified Servant.Docs                     as Docs
 
-import           FileCollector.Common.Utils.Aeson (lensDefaultOptions)
+import           FileCollector.Common.Base.Aeson (lensDefaultOptions)
 
 data User = User
   { _user_name :: UserName

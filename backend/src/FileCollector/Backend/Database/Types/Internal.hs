@@ -7,6 +7,7 @@
 {-# LANGUAGE QuasiQuotes                #-}
 {-# LANGUAGE TemplateHaskell            #-}
 {-# LANGUAGE TypeFamilies               #-}
+{-# LANGUAGE FlexibleInstances #-}
 
 module FileCollector.Backend.Database.Types.Internal
   ( migrateAll
@@ -17,19 +18,37 @@ module FileCollector.Backend.Database.Types.Internal
   , DirectoryId
   , File(..)
   , FileId
+  , CanUploadTo(..)
+  , CanUploadToId
   , Unique (UniqueUserName, UniqueOwnerDir, UniqueFile)
+  , EntityField
+    ( UserName
+    , UserPassword
+    , UserRole
+    , DirectoryName
+    , DirectoryOwner
+    , DirectoryExpirationTime
+    , DirectoryUploadRules
+    , FileName
+    , FileHashValue
+    , FileUploader
+    , FileDirectory
+    , FileRawPath
+    , CanUploadToUser
+    , CanUploadToDirectory
+    )
   ) where
 
 import Data.ByteString (ByteString)
 import Data.Text (Text)
 import Data.Time (UTCTime)
-import Database.Persist (Unique)
+import Database.Persist (EntityField, Unique)
 import Database.Persist.TH
     (mkMigrate, mkPersist, persistLowerCase, share, sqlSettings)
 
-import FileCollector.Backend.Database.Types.Role
-import FileCollector.Backend.Database.Types.UploadRule (UploadRule)
-import FileCollector.Common.Types.Convertible
+import           FileCollector.Backend.Database.Types.Role
+import           FileCollector.Backend.Database.Types.UploadRule (UploadRule)
+import           FileCollector.Common.Base.Convertible
 import qualified FileCollector.Common.Types.User as Common
 
 share [mkPersist sqlSettings, mkMigrate "migrateAll"] [persistLowerCase|
@@ -53,6 +72,10 @@ File
   directory DirectoryId
   rawPath ByteString
   UniqueFile directory uploader name
+  deriving Show
+CanUploadTo
+  user UserId
+  directory DirectoryId
   deriving Show
 |]
 

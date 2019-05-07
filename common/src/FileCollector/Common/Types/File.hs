@@ -24,7 +24,7 @@ import qualified Servant.Docs                         as Docs
 
 import           FileCollector.Common.Types.HashValue
 import           FileCollector.Common.Types.User      (UserName (..))
-import           FileCollector.Common.Utils.Aeson     (lensDefaultOptions)
+import           FileCollector.Common.Base.Aeson     (lensDefaultOptions)
 
 data File = File
   { _file_name         :: FileName

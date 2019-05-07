@@ -21,7 +21,7 @@ import Data.Aeson
 import Data.Text (Text)
 import GHC.Generics (Generic)
 
-import FileCollector.Common.Utils.Aeson (removeFieldNs)
+import FileCollector.Common.Base.Aeson (lensDefaultOptions)
 
 -- |Server initial configuration
 data Config = Config
@@ -54,8 +54,7 @@ instance FromJSON LogLevelWrapped where
 makeLenses ''Config
 
 instance FromJSON Config where
-  parseJSON = genericParseJSON defaultOptions
-    { fieldLabelModifier = removeFieldNs }
+  parseJSON = genericParseJSON lensDefaultOptions
 
 -- |Read configuration from file. Returns Nothing if any error occur.
 --

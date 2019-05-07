@@ -23,5 +23,5 @@ instance MonadConnection App where
 
   withConnection :: ReaderT SqlBackend App a -> App a
   withConnection action = do
-    connPool <- (view appEnv_sqlConnPool) <$> ask
+    connPool <- asks (view appEnv_sqlConnPool)
     withResource connPool (runReaderT action)

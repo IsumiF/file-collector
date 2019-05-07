@@ -35,6 +35,7 @@ library
       FileCollector.Backend.Handler.AppHandler
       FileCollector.Backend.Handler.Auth
       FileCollector.Backend.Handler.Impl.User
+      FileCollector.Backend.Handler.Impl.File
       FileCollector.Backend.Database
       FileCollector.Backend.Database.Types.Internal
       FileCollector.Backend.Database.Types.User
@@ -42,13 +43,19 @@ library
       FileCollector.Backend.Database.Types.UploadRule
       FileCollector.Backend.Database.Types.Directory
       FileCollector.Backend.Database.Types.File
+      FileCollector.Backend.Database.Types.CanUploadTo
       FileCollector.Backend.Database.Class.MonadConnection
       FileCollector.Backend.Database.Class.MonadUser
+      FileCollector.Backend.Database.Class.MonadReadDirectory
+      FileCollector.Backend.Database.Class.Internal.Prelude
+      FileCollector.Backend.Database.Impl.Internal.Prelude
+      FileCollector.Backend.Database.Impl.ReadDirectory
       FileCollector.Backend.Oss.Class.MonadOssServer
       FileCollector.Backend.Oss.Aliyun
       FileCollector.Backend.Core.BasicAuth
       FileCollector.Backend.Core.User
       FileCollector.Backend.Core.Password
+      FileCollector.Backend.Core.File
       FileCollector.Backend.Core.Class.Serializable
   build-depends:
       file-collector-common
@@ -75,6 +82,7 @@ library
     , monad-control
     , transformers-base
     , unliftio-core
+    , string-interpolate
 
 executable server
   import: exe-base

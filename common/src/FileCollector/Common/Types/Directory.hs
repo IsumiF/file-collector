@@ -29,7 +29,7 @@ import           Servant.API
 import qualified Servant.Docs                     as Docs
 
 import           FileCollector.Common.Types.User  (UserName (..))
-import           FileCollector.Common.Utils.Aeson (removeFieldNs)
+import           FileCollector.Common.Base.Aeson (removeFieldNs)
 
 data Directory = Directory
   { _directory_name           :: DirectoryName

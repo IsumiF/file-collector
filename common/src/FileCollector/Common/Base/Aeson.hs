@@ -1,4 +1,4 @@
-module FileCollector.Common.Utils.Aeson
+module FileCollector.Common.Base.Aeson
   ( removeFieldNs
   , lensDefaultOptions
   ) where

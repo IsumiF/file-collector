@@ -14,6 +14,7 @@ module FileCollector.Common.Api.File
     Api
     -- * Inner APIs
     -- ** Directory
+  , ApiDir
   , ApiGetDirList
   , ApiGetDir
   , ApiPutDir
@@ -24,6 +25,8 @@ module FileCollector.Common.Api.File
   , ApiGetFile
   , ApiPutFile
   , ApiDeleteFile
+    -- **Batch download
+  , ApiBatchDownload
   ) where
 
 import           Data.Proxy                                 (Proxy (..))

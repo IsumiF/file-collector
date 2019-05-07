@@ -1,7 +1,7 @@
 {-# LANGUAGE FlexibleInstances     #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 
-module FileCollector.Common.Types.Convertible
+module FileCollector.Common.Base.Convertible
   ( Convertible (..)
   ) where
 

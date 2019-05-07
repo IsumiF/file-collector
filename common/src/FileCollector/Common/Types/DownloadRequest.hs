@@ -20,7 +20,7 @@ import qualified Servant.Docs                         as Docs
 import           FileCollector.Common.Types.Directory (DirectoryName (..))
 import           FileCollector.Common.Types.File      (FileName (..))
 import           FileCollector.Common.Types.User      (UserName (..))
-import           FileCollector.Common.Utils.Aeson     (lensDefaultOptions)
+import           FileCollector.Common.Base.Aeson     (lensDefaultOptions)
 
 data DownloadRequest = DownloadRequest
   { _downloadRequest_dirOwner     :: UserName
