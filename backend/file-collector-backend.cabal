@@ -110,4 +110,5 @@ test-suite db
     , monad-logger
     , mtl
     , transformers
+    , unliftio-core
     , time
