@@ -79,12 +79,35 @@ library
     , cryptonite >= 0.25 && < 0.26
     , data-default ^>= 0.7.1
     , optparse-applicative ^>= 0.14.3
-    , monad-control
-    , transformers-base
-    , unliftio-core
-    , string-interpolate
+    , monad-control ^>= 1.0.2.3
+    , transformers-base ^>= 0.4.5.2
+    , unliftio-core ^>= 0.1.2.0
+    , string-interpolate ^>= 0.1.0.1
 
 executable server
   import: exe-base
   hs-source-dirs: app
   main-is: Server.hs
+
+test-suite db
+  type: exitcode-stdio-1.0
+  default-language: Haskell2010
+  hs-source-dirs: test/db
+  main-is: Main.hs
+  other-modules:
+      FileCollector.Backend.Database.Spec.ReadDirectorySpec
+      FileCollector.Backend.Database.Spec.Util
+  build-tool-depends:
+      hspec-discover:hspec-discover
+  build-depends:
+      base
+    , file-collector-backend
+    , file-collector-common
+    , hspec ^>= 2.5.5
+    , QuickCheck ^>= 2.11.3
+    , persistent
+    , persistent-sqlite
+    , monad-logger
+    , mtl
+    , transformers
+    , time

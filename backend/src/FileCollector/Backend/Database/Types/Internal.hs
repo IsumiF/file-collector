@@ -64,7 +64,7 @@ Directory
   expirationTime UTCTime Maybe
   uploadRules [UploadRule]
   UniqueOwnerDir owner name
-  deriving Show
+  deriving Show Eq
 File
   name Text
   hashValue ByteString

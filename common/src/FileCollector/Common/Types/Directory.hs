@@ -21,15 +21,15 @@ module FileCollector.Common.Types.Directory
 
 import           Control.Lens
 import           Data.Aeson
-import           Data.Text                        (Text)
-import           Data.Time                        (UTCTime (..), fromGregorian)
-import           Data.Word                        (Word32)
+import           Data.Text (Text)
+import           Data.Time (UTCTime (..), fromGregorian)
+import           Data.Word (Word32)
 import           GHC.Generics
 import           Servant.API
-import qualified Servant.Docs                     as Docs
+import qualified Servant.Docs as Docs
 
-import           FileCollector.Common.Types.User  (UserName (..))
-import           FileCollector.Common.Base.Aeson (removeFieldNs)
+import FileCollector.Common.Base.Aeson (removeFieldNs)
+import FileCollector.Common.Types.User (UserName (..))
 
 data Directory = Directory
   { _directory_name           :: DirectoryName
@@ -37,10 +37,10 @@ data Directory = Directory
   -- | Expiration time. @Nothing@ means the directory never expires.
   , _directory_expirationTime :: Maybe UTCTime
   , _directory_uploadRules    :: [UploadRule]
-  } deriving (Generic, Show)
+  } deriving (Generic, Show, Eq)
 
 newtype DirectoryName = DirectoryName Text
-  deriving (Generic, Show, FromJSON, ToJSON, FromHttpApiData, ToHttpApiData)
+  deriving (Generic, Show, Eq, FromJSON, ToJSON, FromHttpApiData, ToHttpApiData)
 
 data UploadRule =
   -- | maximum file size, in bytes
@@ -49,7 +49,7 @@ data UploadRule =
   | RuleFileNameFormat Text
   -- | Maximum number of files can be uploaded by a single uploader
   | RuleMaxFiles Int
-    deriving (Generic, Show)
+    deriving (Generic, Show, Eq)
 
 makeLenses ''Directory
 

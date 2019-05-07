@@ -14,12 +14,12 @@ module FileCollector.Common.Types.User
 
 import           Control.Lens
 import           Data.Aeson
-import           Data.Text                        (Text)
-import           GHC.Generics                     (Generic)
+import           Data.Text (Text)
+import           GHC.Generics (Generic)
 import           Servant.API
-import qualified Servant.Docs                     as Docs
+import qualified Servant.Docs as Docs
 
-import           FileCollector.Common.Base.Aeson (lensDefaultOptions)
+import FileCollector.Common.Base.Aeson (lensDefaultOptions)
 
 data User = User
   { _user_name :: UserName
@@ -27,7 +27,7 @@ data User = User
   } deriving (Show, Generic)
 
 newtype UserName = UserName Text
-  deriving (Show, Generic, FromHttpApiData, ToHttpApiData)
+  deriving (Show, Eq, Ord, Generic, FromHttpApiData, ToHttpApiData)
 
 data Role = RoleUploader | RoleCollector | RoleAdmin
   deriving (Show, Eq, Generic)

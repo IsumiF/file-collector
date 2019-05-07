@@ -40,7 +40,7 @@ library
     , time ^>= 1.8
     , lens ^>= 4.16.1
     , bytestring ^>= 0.10.8.2
-    , base64-bytestring
+    , base64-bytestring ^>= 1.0.0.2
 
 executable gen-api-doc
   main-is: GenApiDoc.hs
@@ -54,4 +54,4 @@ executable gen-api-doc
       , servant-docs
       , servant-pandoc
       , pandoc ^>= 2.5
-      , text
+      , text ^>= 1.2

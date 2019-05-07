@@ -12,7 +12,7 @@ import qualified FileCollector.Common.Types.Directory as Common
     (UploadRule (..))
 
 newtype UploadRule = UploadRule Common.UploadRule
-  deriving (Aeson.FromJSON, Aeson.ToJSON)
+  deriving (Aeson.FromJSON, Aeson.ToJSON, Eq)
 
 instance Show UploadRule where
   show (UploadRule x) = show x
