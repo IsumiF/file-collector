@@ -45,7 +45,7 @@ library
       FileCollector.Backend.Database.Types.File
       FileCollector.Backend.Database.Types.CanUploadTo
       FileCollector.Backend.Database.Class.MonadConnection
-      FileCollector.Backend.Database.Class.MonadUser
+      FileCollector.Backend.Database.Class.MonadReadUser
       FileCollector.Backend.Database.Class.MonadReadDirectory
       FileCollector.Backend.Database.Class.Internal.Prelude
       FileCollector.Backend.Database.Impl.Internal.Prelude

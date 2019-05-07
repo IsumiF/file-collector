@@ -20,7 +20,7 @@ import Data.String.Interpolate (i)
 
 import qualified FileCollector.Backend.Database.Class.MonadConnection as Db
 import qualified FileCollector.Backend.Database.Class.MonadReadDirectory as Db
-import qualified FileCollector.Backend.Database.Class.MonadUser as Db
+import qualified FileCollector.Backend.Database.Class.MonadReadUser as Db
 import qualified FileCollector.Backend.Database.Types.Directory as Db
 import qualified FileCollector.Backend.Database.Types.UploadRule as Db
 import qualified FileCollector.Backend.Database.Types.User as Db
@@ -32,7 +32,7 @@ getVisibleDirectories ::
   ( Db.MonadConnection m
   , Db.Backend m ~ backend
   , Db.MonadReadDirectory (ReaderT backend m)
-  , Db.MonadUser (ReaderT backend m)
+  , Db.MonadReadUser (ReaderT backend m)
   , MonadLogger m
   )
   => User
@@ -49,7 +49,7 @@ getVisibleDirectories me = do
 
 getUploaderVisibleDirs ::
   ( Db.MonadReadDirectory m
-  , Db.MonadUser m
+  , Db.MonadReadUser m
   , MonadLogger m
   )
   => UserName
@@ -60,7 +60,7 @@ getUploaderVisibleDirs (UserName name) = do
 
 getCollectorOwnDirs ::
   ( Db.MonadReadDirectory m
-  , Db.MonadUser m
+  , Db.MonadReadUser m
   , MonadLogger m
   )
   => UserName
@@ -71,7 +71,7 @@ getCollectorOwnDirs (UserName name) = do
 
 getAllDirectories ::
   ( Db.MonadReadDirectory m
-  , Db.MonadUser m
+  , Db.MonadReadUser m
   , MonadLogger m
   )
   => m [Directory]
@@ -81,7 +81,7 @@ getAllDirectories = do
 
 dirDbToCommon ::
   ( Db.MonadReadDirectory m
-  , Db.MonadUser m
+  , Db.MonadReadUser m
   , MonadLogger m
   )
   => Db.Directory

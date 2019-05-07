@@ -11,15 +11,15 @@ import Data.Text (Text)
 
 import qualified FileCollector.Backend.Database.Class.MonadConnection as Db
     (Backend, MonadConnection, withConnection)
-import qualified FileCollector.Backend.Database.Class.MonadUser as Db
-    (MonadUser, getUserByName)
+import qualified FileCollector.Backend.Database.Class.MonadReadUser as Db
+    (MonadReadUser, getUserByName)
 import qualified FileCollector.Backend.Database.Types.Role as Db (toCommonRole)
 import qualified FileCollector.Backend.Database.Types.User as Db (User (..))
 import           FileCollector.Common.Types.User
 
 getUserByName ::
   ( Db.MonadConnection m
-  , Db.MonadUser (ReaderT backend m)
+  , Db.MonadReadUser (ReaderT backend m)
   , Db.Backend m ~ backend
   )
   => Text

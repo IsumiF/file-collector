@@ -16,14 +16,14 @@ import           FileCollector.Backend.Core.Password (checkPassword)
 import           FileCollector.Backend.Core.User (userDbToCommon)
 import qualified FileCollector.Backend.Database.Class.MonadConnection as Db
     (Backend, MonadConnection, withConnection)
-import qualified FileCollector.Backend.Database.Class.MonadUser as Db
-    (MonadUser, getUserByName)
+import qualified FileCollector.Backend.Database.Class.MonadReadUser as Db
+    (MonadReadUser, getUserByName)
 import qualified FileCollector.Backend.Database.Types.User as Db (userPassword)
 import           FileCollector.Common.Api.Auth (UserAuthWrapper, minRole, wrap)
 import           FileCollector.Common.Types.User
 
 authCheck :: forall backend m usr.
-  ( Db.MonadUser (ReaderT backend m)
+  ( Db.MonadReadUser (ReaderT backend m)
   , Db.MonadConnection m
   , Db.Backend m ~ backend
   , UserAuthWrapper usr

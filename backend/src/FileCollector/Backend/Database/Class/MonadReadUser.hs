@@ -1,7 +1,7 @@
 {-# LANGUAGE FlexibleInstances #-}
 
-module FileCollector.Backend.Database.Class.MonadUser
-  ( MonadUser (..)
+module FileCollector.Backend.Database.Class.MonadReadUser
+  ( MonadReadUser (..)
   ) where
 
 import Control.Monad.IO.Class (MonadIO)
@@ -12,11 +12,11 @@ import Database.Persist.Sql (SqlBackend)
 
 import FileCollector.Backend.Database.Types.User
 
-class Monad m => MonadUser m where
+class Monad m => MonadReadUser m where
   getUserByName :: Text -> m (Maybe User)
   getUserById :: UserId -> m (Maybe User)
 
-instance MonadIO m => MonadUser (ReaderT SqlBackend m) where
+instance MonadIO m => MonadReadUser (ReaderT SqlBackend m) where
   getUserByName name = do
     maybeEntityUser <- getBy (UniqueUserName name)
     pure $ fmap entityVal maybeEntityUser
