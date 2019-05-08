@@ -22,18 +22,22 @@ module FileCollector.Backend.Database.Types.Internal
   , CanUploadToId
   , Unique (UniqueUserName, UniqueOwnerDir, UniqueFile)
   , EntityField
-    ( UserName
+    ( UserId
+    , UserName
     , UserPassword
     , UserRole
+    , DirectoryId
     , DirectoryName
     , DirectoryOwner
     , DirectoryExpirationTime
     , DirectoryUploadRules
+    , FileId
     , FileName
     , FileHashValue
     , FileUploader
     , FileDirectory
     , FileRawPath
+    , CanUploadToId
     , CanUploadToUser
     , CanUploadToDirectory
     )

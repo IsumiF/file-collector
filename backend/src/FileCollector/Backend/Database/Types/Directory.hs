@@ -3,7 +3,8 @@ module FileCollector.Backend.Database.Types.Directory
   , DirectoryId
   , Unique (UniqueOwnerDir)
   , EntityField
-    ( DirectoryName
+    ( DirectoryId
+    , DirectoryName
     , DirectoryOwner
     , DirectoryExpirationTime
     , DirectoryUploadRules
