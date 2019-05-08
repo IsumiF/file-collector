@@ -7,10 +7,7 @@
 
 module FileCollector.Backend.Core.File
   ( getVisibleDirectories
-  -- * Internal
-  , getUploaderVisibleDirs
-  , getCollectorOwnDirs
-  , getAllDirectories
+  , getDirectory
   ) where
 
 import Control.Lens
@@ -78,6 +75,47 @@ getAllDirectories ::
 getAllDirectories = do
     dbDirs <- Db.getAllDirectories
     traverse dirDbToCommon dbDirs
+
+getDirectory :: 
+  ( Db.MonadConnection m
+  , Db.Backend m ~ backend
+  , Db.MonadReadDirectory (ReaderT backend m)
+  , Db.MonadReadUser (ReaderT backend m)
+  , MonadLogger m
+  )
+  => User -- ^ current user
+  -> UserName -- ^ owner name
+  -> DirectoryName -- ^ directory name
+  -> m (Maybe Directory)
+getDirectory user name dir = Db.withConnection (getDirectory' user name dir)
+
+getDirectory' ::
+  ( Db.MonadReadDirectory m
+  , Db.MonadReadUser m
+  , MonadLogger m
+  )
+  => User
+  -> UserName
+  -> DirectoryName
+  -> m (Maybe Directory)
+getDirectory' user ownerName dirName =
+    case user ^. user_role of
+      RoleAdmin -> getDir
+      RoleCollector ->
+        if user ^. user_name == convert ownerName
+        then getDir
+        else pure Nothing
+      RoleUploader -> do
+        maybeDirId <- Db.getDirectoryId (convert ownerName) (convert dirName)
+        case maybeDirId of
+          Nothing -> pure Nothing
+          Just dirId -> do
+            visible <- Db.isDirectoryVisible (convert $ user ^. user_name) dirId
+            if visible then getDir else pure Nothing
+  where
+    getDir = do
+      maybeDir <- Db.getDirectory (convert ownerName) (convert dirName)
+      traverse dirDbToCommon maybeDir
 
 dirDbToCommon ::
   ( Db.MonadReadDirectory m

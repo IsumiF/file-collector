@@ -5,10 +5,14 @@
 
 module FileCollector.Backend.Database.Impl.ReadDirectory
   ( getDirectory
+  , getDirectoryId
   , getOwnDirectories
   , getVisibleDirectories
   , getAllDirectories
+  , isDirectoryVisible
   ) where
+
+import Data.Maybe (isJust)
 
 import FileCollector.Backend.Database.Impl.Internal.Prelude
 import FileCollector.Backend.Database.Types.CanUploadTo
@@ -26,6 +30,18 @@ getDirectory ownerName dirName = liftPersist $ do
       Just ownerId -> do
         maybeEntityDirectory <- getBy (UniqueOwnerDir ownerId dirName)
         pure $ fmap entityVal maybeEntityDirectory
+
+getDirectoryId :: MonadSqlDb m
+               => Text -- ^owner name
+               -> Text -- ^directory name
+               -> m (Maybe DirectoryId)
+getDirectoryId ownerName dirName = liftPersist $ do
+    maybeEntityOwner <- getBy (UniqueUserName ownerName)
+    case maybeEntityOwner of
+      Nothing -> pure Nothing
+      Just entityOwner -> do
+        let ownerId = entityKey entityOwner
+        (fmap . fmap) entityKey $ getBy (UniqueOwnerDir ownerId dirName)
 
 getOwnDirectories :: MonadSqlDb m
                   => Text
@@ -59,3 +75,16 @@ getAllDirectories :: MonadSqlDb m => m [Directory]
 getAllDirectories = liftPersist $ do
     dirEntities <- selectList [] []
     pure $ fmap entityVal dirEntities
+
+isDirectoryVisible :: MonadSqlDb m
+                   => Text -- ^user name
+                   -> DirectoryId -- ^dir id
+                   -> m Bool
+isDirectoryVisible username dirId = liftPersist $ do
+    maybeUserId <- (fmap . fmap) entityKey $ getBy (UniqueUserName username)
+    case maybeUserId of
+      Nothing -> pure False
+      Just userId -> do
+        maybeEntity <- selectFirst
+          [CanUploadToUser ==. userId, CanUploadToDirectory ==. dirId] []
+        pure $ isJust maybeEntity

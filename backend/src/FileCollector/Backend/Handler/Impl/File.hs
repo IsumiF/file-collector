@@ -4,21 +4,28 @@ module FileCollector.Backend.Handler.Impl.File
 
 import Servant
 
-import           FileCollector.Backend.App (App)
-import qualified FileCollector.Backend.Core.File as Core (getVisibleDirectories)
+import qualified FileCollector.Backend.Core.File as Core
+    (getDirectory, getVisibleDirectories)
+import           FileCollector.Backend.Handler.AppHandler
 import           FileCollector.Common.Api.Auth (UserUploader (..))
 import           FileCollector.Common.Api.File
 
-handler :: ServerT (Api ossProvider) App
+handler :: ServerT (Api ossProvider) AppHandler
 handler =
     handlerDir
   :<|> undefined
 
-handlerDir :: ServerT (ApiDir ossProvider) App
+handlerDir :: ServerT (ApiDir ossProvider) AppHandler
 handlerDir =
     handlerGetDirList
+  :<|> handlerGetDir
   :<|> undefined
 
-handlerGetDirList :: ServerT ApiGetDirList App
+handlerGetDirList :: ServerT ApiGetDirList AppHandler
 handlerGetDirList (UserUploader user) =
-    Core.getVisibleDirectories user
+    lift $ Core.getVisibleDirectories user
+
+handlerGetDir :: ServerT ApiGetDir AppHandler
+handlerGetDir (UserUploader user) ownerName dirName = do
+    maybeDir <- lift $ Core.getDirectory user ownerName dirName
+    maybe (throwError err404) pure maybeDir
