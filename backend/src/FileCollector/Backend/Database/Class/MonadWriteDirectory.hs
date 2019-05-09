@@ -14,6 +14,10 @@ class MonadReadDirectory m => MonadWriteDirectory m where
   updateDirectory :: DirectoryId
                   -> Directory -- ^new directory properties
                   -> m ()
+  deleteDirectory :: DirectoryId
+                  -> m ()
 
 instance MonadIO m => MonadWriteDirectory (ReaderT SqlBackend m) where
   updateDirectory = Impl.updateDirectory
+
+  deleteDirectory = Impl.deleteDirectory

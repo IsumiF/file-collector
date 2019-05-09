@@ -20,6 +20,7 @@ handlerDir =
     handlerGetDirList
   :<|> handlerGetDir
   :<|> handlerPutDir
+  :<|> handlerDeleteDir
   :<|> undefined
 
 handlerGetDirList :: ServerT ApiGetDirList AppHandler
@@ -41,3 +42,13 @@ handlerPutDir (UserCollector me) userName dirName newDir = do
           Core.UDErrCanNotUpdate    -> throwError err403
       Right _ ->
         pure ()
+
+handlerDeleteDir :: ServerT ApiDeleteDir AppHandler
+handlerDeleteDir (UserCollector me) ownerName dirName = do
+    succeeded <- lift $ Core.deleteDirectory me ownerName dirName
+    if not succeeded
+    then throwError err404
+    else pure ()
+
+-- handlerDirUploaders :: ServerT ApiDirUploaders AppHandler
+-- handlerDirUploaders _ = undefined

@@ -6,18 +6,24 @@
 {-# LANGUAGE TypeFamilies      #-}
 
 module FileCollector.Backend.Core.File
-  ( getVisibleDirectories
+  ( -- * Top level functions
+    getVisibleDirectories
   , getDirectory
   , updateDirectory
   , UpdateDirectoryError(..)
+  , deleteDirectory
+    -- * Inner functions
+  , dirDbToCommon
+  , dirCommonToDb
   ) where
 
 import Control.Lens
 import Control.Monad.Logger
 import Control.Monad.Reader
-import Data.String.Interpolate (i)
-import Control.Monad.Trans.Maybe
 import Control.Monad.Trans.Except
+import Control.Monad.Trans.Maybe
+import Data.Maybe (isJust)
+import Data.String.Interpolate (i)
 
 import qualified FileCollector.Backend.Database.Class.MonadConnection as Db
 import qualified FileCollector.Backend.Database.Class.MonadReadDirectory as Db
@@ -187,3 +193,28 @@ updateDirectory me ownerName dirName newDir = Db.withConnection $ do
 
 data UpdateDirectoryError = UDErrNoSuchDirectory
                           | UDErrCanNotUpdate
+
+deleteDirectory ::
+  ( Db.MonadConnection m
+  , Db.Backend m ~ backend
+  , Db.MonadWriteDirectory (ReaderT backend m)
+  , Db.MonadReadUser (ReaderT backend m)
+  )
+  => User -- ^ current user
+  -> UserName -- ^ directory owner
+  -> DirectoryName -- ^ directory name
+  -> m Bool
+deleteDirectory me ownerName dirName =
+    -- TODO Files belong to this directory should be deleted too.
+    Db.withConnection $ fmap isJust $ runMaybeT $ do
+      maybeTExitOn $ not $
+        me ^. user_name == ownerName && me ^. user_role == RoleCollector
+        || me ^. user_role == RoleAdmin
+      dirId <- MaybeT $ Db.getDirectoryId (convert ownerName) (convert dirName)
+      lift $ Db.deleteDirectory dirId
+
+maybeTExit :: Applicative m => MaybeT m a
+maybeTExit = MaybeT $ pure Nothing
+
+maybeTExitOn :: Applicative m => Bool -> MaybeT m ()
+maybeTExitOn cond = if cond then maybeTExit else MaybeT $ pure (Just ())
