@@ -8,16 +8,21 @@
 module FileCollector.Backend.Core.File
   ( getVisibleDirectories
   , getDirectory
+  , updateDirectory
+  , UpdateDirectoryError(..)
   ) where
 
 import Control.Lens
 import Control.Monad.Logger
 import Control.Monad.Reader
 import Data.String.Interpolate (i)
+import Control.Monad.Trans.Maybe
+import Control.Monad.Trans.Except
 
 import qualified FileCollector.Backend.Database.Class.MonadConnection as Db
 import qualified FileCollector.Backend.Database.Class.MonadReadDirectory as Db
 import qualified FileCollector.Backend.Database.Class.MonadReadUser as Db
+import qualified FileCollector.Backend.Database.Class.MonadWriteDirectory as Db
 import qualified FileCollector.Backend.Database.Types.Directory as Db
 import qualified FileCollector.Backend.Database.Types.UploadRule as Db
 import qualified FileCollector.Backend.Database.Types.User as Db
@@ -76,7 +81,7 @@ getAllDirectories = do
     dbDirs <- Db.getAllDirectories
     traverse dirDbToCommon dbDirs
 
-getDirectory :: 
+getDirectory ::
   ( Db.MonadConnection m
   , Db.Backend m ~ backend
   , Db.MonadReadDirectory (ReaderT backend m)
@@ -137,3 +142,48 @@ dirDbToCommon (Db.Directory name ownerId expTime uploadRules) = do
       (UserName ownerName)
       expTime
       uploadRules'
+
+dirCommonToDb ::
+  ( Db.MonadReadUser m
+  , Db.MonadWriteDirectory m
+  )
+  => Directory
+  -> m (Maybe Db.Directory)
+dirCommonToDb dir = do
+    let ownerName = dir ^. directory_ownerName
+    maybeOwnerId <- Db.getIdByUserName (convert ownerName)
+    case maybeOwnerId of
+      Nothing -> pure Nothing
+      Just ownerId -> do
+        let result = Db.Directory
+              (convert (dir ^. directory_name))
+              ownerId
+              (dir ^. directory_expirationTime)
+              (fmap convert (dir ^. directory_uploadRules))
+        pure $ Just result
+
+updateDirectory ::
+  ( Db.MonadConnection m
+  , Db.Backend m ~ backend
+  , Db.MonadWriteDirectory (ReaderT backend m)
+  , Db.MonadReadUser (ReaderT backend m)
+  , MonadLogger m
+  )
+  => User -- ^ current user
+  -> UserName -- ^ directory owner's name
+  -> DirectoryName -- ^ directory name
+  -> Directory -- ^ new directory
+  -> m (Either UpdateDirectoryError ())
+updateDirectory me ownerName dirName newDir = Db.withConnection $ do
+    let role = me ^. user_role
+    if role == RoleAdmin || role == RoleCollector && me ^. user_name == ownerName
+    then
+      runExceptT $ maybeToExceptT UDErrNoSuchDirectory $ do
+        dirId <- MaybeT $ Db.getDirectoryId (convert ownerName) (convert dirName)
+        newDirDb <- MaybeT $ dirCommonToDb newDir
+        lift $ Db.updateDirectory dirId newDirDb
+    else
+      pure $ Left UDErrNoSuchDirectory
+
+data UpdateDirectoryError = UDErrNoSuchDirectory
+                          | UDErrCanNotUpdate
