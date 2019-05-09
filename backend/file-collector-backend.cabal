@@ -92,6 +92,9 @@ library
       FileCollector.Backend.Core.Password
       FileCollector.Backend.Core.File
       FileCollector.Backend.Core.Class.Serializable
+  c-sources:
+      csrc/aliyun_oss.c
+  extra-libraries: pthread oss_c_sdk curl mxml apr-1 aprutil-1
 
 executable server
   import: exe-base

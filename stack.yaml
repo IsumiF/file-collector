@@ -27,3 +27,8 @@ flags:
     use-warp: true
 build:
   haddock-hyperlink-source: false
+extra-include-dirs:
+- /usr/local/include/oss_c_sdk
+- /usr/include/apr-1.0/
+extra-lib-dirs:
+- /usr/local/lib
