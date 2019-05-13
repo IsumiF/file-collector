@@ -93,7 +93,6 @@ library
       FileCollector.Backend.Core.User
       FileCollector.Backend.Core.Password
       FileCollector.Backend.Core.File
-      FileCollector.Backend.Core.Class.Serializable
   c-sources:
       csrc/aliyun_oss.c
   includes:

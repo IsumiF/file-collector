@@ -1,3 +1,4 @@
+{-# LANGUAGE FlexibleContexts      #-}
 {-# LANGUAGE FlexibleInstances     #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE TypeFamilies          #-}
@@ -7,15 +8,18 @@ module FileCollector.Backend.Oss.Class.MonadOssService
   , FileName(AliyunFileName)
   ) where
 
-import Control.Monad.IO.Class
-import Data.Text (Text)
+import           Control.Monad.IO.Class
+import           Data.ByteString (ByteString)
+import           Data.Text (Text)
+import qualified Data.Text.Encoding as T
 
-import FileCollector.Common.Types.OssProvider
-import FileCollector.Common.Types.OssProviderImpl.Aliyun
-import FileCollector.Backend.Oss.Class.MonadReadAliyunConfig
 import qualified FileCollector.Backend.Oss.Aliyun.Internal as Aliyun
+import           FileCollector.Backend.Oss.Class.MonadReadAliyunConfig
+import           FileCollector.Common.Base.Convertible
+import           FileCollector.Common.Types.OssProvider
+import           FileCollector.Common.Types.OssProviderImpl.Aliyun
 
-class (Monad m, OssProvider provider) => MonadOssService provider m where
+class (Monad m, OssProvider provider, Convertible ByteString (FileName provider)) => MonadOssService provider m where
   data FileName provider :: *
   getUploadCredential :: FileName provider -> m (OssClientCredential provider)
   getDownloadCredential :: FileName provider -> m (OssClientCredential provider)
@@ -35,3 +39,6 @@ instance (MonadIO m, MonadReadAliyunConfig m) => MonadOssService Aliyun m where
     accessKey <- getAccessKey
     objId <- getObjectId objectName
     liftIO $ Aliyun.deleteFile accessKey objId
+
+instance Convertible ByteString (FileName Aliyun) where
+  convert rawFileName = AliyunFileName $ T.decodeUtf8 rawFileName
