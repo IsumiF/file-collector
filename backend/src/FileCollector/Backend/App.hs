@@ -13,6 +13,7 @@ module FileCollector.Backend.App
   -- **AppEnv
   , appEnv_sqlConnPool
   , appEnv_logger
+  , appEnv_oss
   ) where
 
 import Control.Lens
@@ -26,17 +27,21 @@ import Control.Monad.Trans.Control
 import Data.Pool (Pool)
 import Database.Persist.Sql (SqlBackend)
 
+import FileCollector.Backend.Config (ConfigOss)
+
 import FileCollector.Backend.Logger (Logger)
 
 -- | The environment stored in 'App' monad
 data AppEnv = AppEnv
   { _appEnv_sqlConnPool :: Pool SqlBackend
   , _appEnv_logger      :: Logger
+  , _appEnv_oss         :: ConfigOss
   }
 
 -- | Construct new 'AppEnv'
 makeAppEnv :: Pool SqlBackend -- ^SQL connection pool
            -> Logger -- ^logger
+           -> ConfigOss
            -> AppEnv
 makeAppEnv = AppEnv
 

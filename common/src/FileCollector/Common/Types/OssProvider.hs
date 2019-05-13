@@ -1,14 +1,10 @@
 {-# LANGUAGE ConstraintKinds        #-}
-{-# LANGUAGE DeriveGeneric          #-}
 {-# LANGUAGE FlexibleContexts       #-}
-{-# LANGUAGE TemplateHaskell        #-}
 {-# LANGUAGE TypeFamilyDependencies #-}
-{-# LANGUAGE UndecidableInstances   #-}
 
 module FileCollector.Common.Types.OssProvider
   ( OssProvider(..)
-  , IsOssProvider
-  , FileCredential(..)
+  , OssProviderJson
   ) where
 
 import           Control.Lens
@@ -19,30 +15,13 @@ import qualified Servant.Docs                     as Docs
 import           FileCollector.Common.Base.Aeson (lensDefaultOptions)
 
 class OssProvider provider where
-  type Credential provider = a | a -> provider
-  type FileLocation provider = a | a -> provider
+  data OssClientCredential provider
 
-type IsOssProvider provider =
+type OssProviderJson provider =
   ( OssProvider provider
-  , ToJSON (Credential provider)
-  , FromJSON (Credential provider)
-  , ToJSON (FileLocation provider)
-  , FromJSON (FileLocation provider)
+  , ToJSON (OssClientCredential provider)
+  , FromJSON (OssClientCredential provider)
   )
 
-data FileCredential provider = FileCredential
-  { _fileCred_credential :: Credential provider
-  , _fileCred_file       :: FileLocation provider
-  } deriving Generic
-
-makeLenses ''FileCredential
-
-instance IsOssProvider provider => FromJSON (FileCredential provider) where
-  parseJSON = genericParseJSON lensDefaultOptions
-
-instance IsOssProvider provider => ToJSON (FileCredential provider) where
-  toJSON = genericToJSON lensDefaultOptions
-  toEncoding = genericToEncoding lensDefaultOptions
-
-instance IsOssProvider provider => Docs.ToSample (FileCredential provider) where
+instance Docs.ToSample (OssClientCredential provider) where
   toSamples _ = Docs.noSamples

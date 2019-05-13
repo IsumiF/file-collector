@@ -98,14 +98,14 @@ type ApiGetFile ossProvider =
   AuthUploader
   :> CaptureUploaderAndFile
     ( QueryFlag "content"
-    :> Get '[JSON] (File, Maybe (FileCredential ossProvider))
+    :> Get '[JSON] (File, Maybe (OssClientCredential ossProvider))
     )
 
 type ApiPutFile ossProvider =
   AuthUploader
   :> CaptureUploaderAndFile
     ( QueryParam "newName" FileName
-    :> Put '[JSON] (FileCredential ossProvider)
+    :> Put '[JSON] (OssClientCredential ossProvider)
     )
 
 type ApiDeleteFile =
@@ -129,7 +129,7 @@ type ApiBatchDownload ossProvider =
   AuthCollector
   :> "batchDownload"
   :> ReqBody '[JSON] [DownloadRequest]
-  :> Get '[JSON] [FileCredential ossProvider]
+  :> Get '[JSON] [OssClientCredential ossProvider]
 
 instance Docs.ToCapture (Capture "ownerName" UserName) where
   toCapture _ =

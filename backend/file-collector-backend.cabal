@@ -85,8 +85,10 @@ library
       FileCollector.Backend.Database.Impl.Internal.Prelude
       FileCollector.Backend.Database.Impl.ReadDirectory
       FileCollector.Backend.Database.Impl.WriteDirectory
-      FileCollector.Backend.Oss.Class.MonadOssServer
+      FileCollector.Backend.Oss.Class.MonadOssService
+      FileCollector.Backend.Oss.Class.MonadReadAliyunConfig
       FileCollector.Backend.Oss.Aliyun
+      FileCollector.Backend.Oss.Aliyun.Internal
       FileCollector.Backend.Core.BasicAuth
       FileCollector.Backend.Core.User
       FileCollector.Backend.Core.Password
@@ -94,6 +96,10 @@ library
       FileCollector.Backend.Core.Class.Serializable
   c-sources:
       csrc/aliyun_oss.c
+  includes:
+      csrc/aliyun_oss.h
+  include-dirs:
+      csrc
   extra-libraries: pthread oss_c_sdk curl mxml apr-1 aprutil-1
 
 executable server

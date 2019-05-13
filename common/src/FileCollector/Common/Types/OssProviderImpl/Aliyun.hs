@@ -1,25 +1,27 @@
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE TypeFamilies               #-}
+{-# LANGUAGE DeriveGeneric      #-}
+{-# LANGUAGE FlexibleInstances  #-}
+{-# LANGUAGE StandaloneDeriving #-}
+{-# LANGUAGE TypeFamilies       #-}
 
 module FileCollector.Common.Types.OssProviderImpl.Aliyun
-  ( Aliyun
-  , AliyunCredential(..)
-  , AliyunFileLocation(..)
+  ( Aliyun(..)
+  , OssClientCredential(..)
   ) where
 
-import           Data.Aeson
-import           Data.Text                              (Text)
+import Data.Aeson
+import Data.Text (Text)
+import GHC.Generics (Generic)
 
-import           FileCollector.Common.Types.OssProvider
+import FileCollector.Common.Types.OssProvider
 
 data Aliyun = Aliyun
 
-newtype AliyunCredential = AliyunCredential Text
-  deriving (FromJSON, ToJSON)
-
-newtype AliyunFileLocation = AliyunFileLocation Text
-  deriving (FromJSON, ToJSON)
-
 instance OssProvider Aliyun where
-  type Credential Aliyun = AliyunCredential
-  type FileLocation Aliyun = AliyunFileLocation
+  data OssClientCredential Aliyun = AliyunSignedUrl Text
+
+deriving instance Generic (OssClientCredential Aliyun)
+
+instance FromJSON (OssClientCredential Aliyun) where
+
+instance ToJSON (OssClientCredential Aliyun) where
+  toEncoding = genericToEncoding defaultOptions

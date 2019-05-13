@@ -27,7 +27,7 @@ main = do
     docHtml <- Pandoc.handleError result
     TIO.putStrLn docHtml
 
-apiDocs :: forall ossProvider. IsOssProvider ossProvider
+apiDocs :: forall ossProvider. OssProviderJson ossProvider
         => Proxy ossProvider
         -> Docs.API
 apiDocs _ = docs (Proxy :: Proxy (Api ossProvider))
