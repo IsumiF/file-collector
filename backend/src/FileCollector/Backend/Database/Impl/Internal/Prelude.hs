@@ -10,6 +10,7 @@ module FileCollector.Backend.Database.Impl.Internal.Prelude
   , rawSql
   , sqlQQ
   , MonadSqlDb
+  , entityToTuple
   ) where
 
 import Control.Monad.IO.Class
@@ -19,3 +20,6 @@ import Database.Persist
 import Database.Persist.Sql (SqlBackend, rawSql, sqlQQ)
 
 type MonadSqlDb m = (MonadIO m, MonadReader SqlBackend m)
+
+entityToTuple :: Entity record -> (Key record, record)
+entityToTuple entity = (entityKey entity, entityVal entity)

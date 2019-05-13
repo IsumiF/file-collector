@@ -1,3 +1,5 @@
+{-# LANGUAGE FlexibleContexts #-}
+
 module FileCollector.Backend.Handler.Impl.File
   ( handler
   ) where
@@ -6,21 +8,27 @@ import Servant
 
 import qualified FileCollector.Backend.Core.File as Core
 import           FileCollector.Backend.Handler.AppHandler
+import           FileCollector.Backend.Oss.Class.MonadOssService
 import           FileCollector.Common.Api.Auth
     (UserCollector (..), UserUploader (..))
 import           FileCollector.Common.Api.File
+import qualified FileCollector.Common.Types as Common
 
-handler :: ServerT (Api ossProvider) AppHandler
-handler =
-    handlerDir
+handler :: MonadOssService ossProvider App
+        => Proxy ossProvider
+        -> ServerT (Api ossProvider) AppHandler
+handler ossProvider =
+    handlerDir ossProvider
   :<|> undefined
 
-handlerDir :: ServerT (ApiDir ossProvider) AppHandler
-handlerDir =
+handlerDir :: MonadOssService ossProvider App
+           => Proxy ossProvider
+           -> ServerT (ApiDir ossProvider) AppHandler
+handlerDir ossProvider =
     handlerGetDirList
   :<|> handlerGetDir
   :<|> handlerPutDir
-  :<|> handlerDeleteDir
+  :<|> handlerDeleteDir ossProvider
   :<|> undefined
 
 handlerGetDirList :: ServerT ApiGetDirList AppHandler
@@ -43,12 +51,14 @@ handlerPutDir (UserCollector me) userName dirName newDir = do
       Right _ ->
         pure ()
 
-handlerDeleteDir :: ServerT ApiDeleteDir AppHandler
-handlerDeleteDir (UserCollector me) ownerName dirName = do
-    succeeded <- lift $ Core.deleteDirectory me ownerName dirName
-    if not succeeded
-    then throwError err404
-    else pure ()
-
--- handlerDirUploaders :: ServerT ApiDirUploaders AppHandler
--- handlerDirUploaders _ = undefined
+handlerDeleteDir :: MonadOssService provider App
+                 => Proxy provider
+                 -> ServerT ApiDeleteDir AppHandler
+handlerDeleteDir ossProvider (UserCollector me) ownerName dirName = do
+    status <- lift $ Core.deleteDirectory ossProvider me ownerName dirName
+    case status of
+      Right _ -> pure Common.DdrFullyDeleted
+      Left err ->
+        case err of
+          Core.DdeNoSuchDirectory -> throwError err404
+          Core.DdePartiallyDeleted -> pure Common.DdrPartiallyDeleted

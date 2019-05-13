@@ -19,6 +19,7 @@ library
       FileCollector.Common.Api.Auth
       FileCollector.Common.Api.User
       FileCollector.Common.Api.File
+      FileCollector.Common.Types
       FileCollector.Common.Types.User
       FileCollector.Common.Types.Password
       FileCollector.Common.Types.Directory
@@ -28,6 +29,7 @@ library
       FileCollector.Common.Types.OssProvider
       FileCollector.Common.Types.OssProviderImpl.Aliyun
       FileCollector.Common.Types.JsonByteString
+      FileCollector.Common.Types.DirectoryDeleteResult
       FileCollector.Common.Base.Convertible
       FileCollector.Common.Base.MonadConvertible
       FileCollector.Common.Base.Aeson

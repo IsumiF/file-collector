@@ -29,18 +29,13 @@ module FileCollector.Common.Api.File
   , ApiBatchDownload
   ) where
 
-import           Data.Proxy                                 (Proxy (..))
-import           Data.Text                                  (Text)
+import           Data.Proxy (Proxy (..))
+import           Data.Text (Text)
 import           Servant.API
-import qualified Servant.Docs                               as Docs
+import qualified Servant.Docs as Docs
 
-import           FileCollector.Common.Api.Auth              (AuthCollector,
-                                                             AuthUploader)
-import           FileCollector.Common.Types.Directory
-import           FileCollector.Common.Types.DownloadRequest
-import           FileCollector.Common.Types.File
-import           FileCollector.Common.Types.OssProvider
-import           FileCollector.Common.Types.User
+import FileCollector.Common.Api.Auth (AuthCollector, AuthUploader)
+import FileCollector.Common.Types
 
 -- | Get all directories visible to current user
 type Api ossProvider = "filesystem" :>
@@ -76,7 +71,7 @@ type ApiPutDir =
 
 type ApiDeleteDir =
   AuthCollector
-  :> CaptureOwnerAndDir (Delete '[JSON] ())
+  :> CaptureOwnerAndDir (Delete '[JSON] DirectoryDeleteResult)
 
 type ApiDirUploaders =
   AuthCollector

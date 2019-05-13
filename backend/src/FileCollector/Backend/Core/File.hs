@@ -1,9 +1,10 @@
-{-# LANGUAGE FlexibleContexts  #-}
-{-# LANGUAGE MultiWayIf        #-}
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE QuasiQuotes       #-}
-{-# LANGUAGE TemplateHaskell   #-}
-{-# LANGUAGE TypeFamilies      #-}
+{-# LANGUAGE FlexibleContexts    #-}
+{-# LANGUAGE MultiWayIf          #-}
+{-# LANGUAGE OverloadedStrings   #-}
+{-# LANGUAGE QuasiQuotes         #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TemplateHaskell     #-}
+{-# LANGUAGE TypeFamilies        #-}
 
 module FileCollector.Backend.Core.File
   ( -- * Top level functions
@@ -12,6 +13,7 @@ module FileCollector.Backend.Core.File
   , updateDirectory
   , UpdateDirectoryError(..)
   , deleteDirectory
+  , DeleteDirectoryError(..)
     -- * Inner functions
   , dirDbToCommon
   , dirCommonToDb
@@ -22,16 +24,21 @@ import Control.Monad.Logger
 import Control.Monad.Reader
 import Control.Monad.Trans.Except
 import Control.Monad.Trans.Maybe
-import Data.Maybe (isJust)
+import Data.Proxy (Proxy (..))
 import Data.String.Interpolate (i)
+import Data.Traversable (for)
 
 import qualified FileCollector.Backend.Database.Class.MonadConnection as Db
+import qualified FileCollector.Backend.Database.Class.MonadDirectoryContent as Db
 import qualified FileCollector.Backend.Database.Class.MonadReadDirectory as Db
 import qualified FileCollector.Backend.Database.Class.MonadReadUser as Db
 import qualified FileCollector.Backend.Database.Class.MonadWriteDirectory as Db
+import qualified FileCollector.Backend.Database.Class.MonadWriteFile as Db
 import qualified FileCollector.Backend.Database.Types.Directory as Db
+import qualified FileCollector.Backend.Database.Types.File as Db
 import qualified FileCollector.Backend.Database.Types.UploadRule as Db
 import qualified FileCollector.Backend.Database.Types.User as Db
+import qualified FileCollector.Backend.Oss.Class.MonadOssService as Oss
 import           FileCollector.Common.Base.Convertible
 import           FileCollector.Common.Types.Directory
 import           FileCollector.Common.Types.User
@@ -195,26 +202,41 @@ data UpdateDirectoryError = UDErrNoSuchDirectory
                           | UDErrCanNotUpdate
 
 deleteDirectory ::
+  forall provider m backend.
   ( Db.MonadConnection m
   , Db.Backend m ~ backend
   , Db.MonadWriteDirectory (ReaderT backend m)
   , Db.MonadReadUser (ReaderT backend m)
+  , Db.MonadDirectoryContent (ReaderT backend m)
+  , Db.MonadWriteFile (ReaderT backend m)
+  , Oss.MonadOssService provider m
   )
-  => User -- ^ current user
+  => Proxy provider
+  -> User -- ^ current user
   -> UserName -- ^ directory owner
   -> DirectoryName -- ^ directory name
-  -> m Bool
-deleteDirectory me ownerName dirName =
-    -- TODO Files belong to this directory should be deleted too.
-    Db.withConnection $ fmap isJust $ runMaybeT $ do
-      maybeTExitOn $ not $
+  -> m (Either DeleteDirectoryError ())
+deleteDirectory _ me ownerName dirName =
+    Db.withConnection $ runExceptT $ do
+      if not $
         me ^. user_name == ownerName && me ^. user_role == RoleCollector
         || me ^. user_role == RoleAdmin
-      dirId <- MaybeT $ Db.getDirectoryId (convert ownerName) (convert dirName)
-      lift $ Db.deleteDirectory dirId
+      then throwE DdeNoSuchDirectory
+      else pure ()
+      dirId <- maybeToExceptT DdeNoSuchDirectory $ MaybeT $ Db.getDirectoryId (convert ownerName) (convert dirName)
+      files <- lift $ Db.getDirectoryContent dirId
 
-maybeTExit :: Applicative m => MaybeT m a
-maybeTExit = MaybeT $ pure Nothing
+      deleteStatList <- for files $ \(fileId, file) -> do
+        let rawPath = Db.fileRawPath file
+        let path = convert rawPath :: Oss.FileName provider
+        deleteStatus <- Oss.deleteFile path
+        if deleteStatus
+        then lift $ Db.deleteFile fileId
+        else pure ()
+        pure deleteStatus
+      if and deleteStatList
+      then lift $ Db.deleteDirectory dirId
+      else throwE DdePartiallyDeleted
 
-maybeTExitOn :: Applicative m => Bool -> MaybeT m ()
-maybeTExitOn cond = if cond then maybeTExit else MaybeT $ pure (Just ())
+data DeleteDirectoryError = DdeNoSuchDirectory
+                          | DdePartiallyDeleted
