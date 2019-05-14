@@ -15,9 +15,6 @@ module FileCollector.Backend.Database.Impl.ReadDirectory
 import Data.Maybe (isJust)
 
 import FileCollector.Backend.Database.Impl.Internal.Prelude
-import FileCollector.Backend.Database.Types.CanUploadTo
-import FileCollector.Backend.Database.Types.Directory
-import FileCollector.Backend.Database.Types.User
 
 getDirectory :: MonadSqlDb m
              => Text -- ^owner name

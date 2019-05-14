@@ -8,7 +8,6 @@ module FileCollector.Backend.Database.Class.MonadReadDirectory
 
 import           FileCollector.Backend.Database.Class.Internal.Prelude
 import qualified FileCollector.Backend.Database.Impl.ReadDirectory as Impl
-import           FileCollector.Backend.Database.Types.Directory
 
 class Monad m => MonadReadDirectory m where
   getDirectory :: Text -- ^owner name

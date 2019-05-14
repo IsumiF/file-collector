@@ -14,6 +14,8 @@ module FileCollector.Backend.Core.File
   , UpdateDirectoryError(..)
   , deleteDirectory
   , DeleteDirectoryError(..)
+  , putDirUploaders 
+  , getDirUploaders
     -- * Inner functions
   , dirDbToCommon
   , dirCommonToDb
@@ -27,6 +29,7 @@ import Control.Monad.Trans.Maybe
 import Data.Proxy (Proxy (..))
 import Data.String.Interpolate (i)
 import Data.Traversable (for)
+import Data.Maybe (isJust)
 
 import qualified FileCollector.Backend.Database.Class.MonadConnection as Db
 import qualified FileCollector.Backend.Database.Class.MonadDirectoryContent as Db
@@ -34,6 +37,7 @@ import qualified FileCollector.Backend.Database.Class.MonadReadDirectory as Db
 import qualified FileCollector.Backend.Database.Class.MonadReadUser as Db
 import qualified FileCollector.Backend.Database.Class.MonadWriteDirectory as Db
 import qualified FileCollector.Backend.Database.Class.MonadWriteFile as Db
+import qualified FileCollector.Backend.Database.Class.MonadDirectoryUploader as Db
 import qualified FileCollector.Backend.Database.Types.Directory as Db
 import qualified FileCollector.Backend.Database.Types.File as Db
 import qualified FileCollector.Backend.Database.Types.UploadRule as Db
@@ -240,3 +244,65 @@ deleteDirectory _ me ownerName dirName =
 
 data DeleteDirectoryError = DdeNoSuchDirectory
                           | DdePartiallyDeleted
+
+putDirUploaders ::
+  ( Db.MonadConnection m
+  , Db.Backend m ~ backend
+  , Db.MonadReadUser (ReaderT backend m)
+  , Db.MonadReadDirectory (ReaderT backend m)
+  , Db.MonadDirectoryUploader (ReaderT backend m)
+  )
+  => User -- ^me
+  -> UserName
+  -> DirectoryName
+  -> [UserName]
+  -> m Bool
+putDirUploaders me ownerName dirName newUploaders = 
+    Db.withConnection $ rollBackOnError $ fmap isJust $ runMaybeT $
+      if (me ^. user_name == ownerName) || (me ^. user_role) == RoleAdmin
+      then do
+        dirId <- MaybeT $ Db.getDirectoryId (convert ownerName) (convert dirName)
+        lift $ Db.deleteAllUploadersOfDir dirId
+        for newUploaders $ \newUploaderName -> do
+          newUploaderId <- MaybeT $ Db.getIdByUserName (convert newUploaderName)
+          lift $ Db.addUploaderToDir dirId newUploaderId
+      else MaybeT $ pure Nothing
+
+rollBackOnError ::
+  ( Db.MonadConnection m
+  , Db.Backend m ~ backend
+  )
+  => ReaderT backend m Bool
+  -> ReaderT backend m Bool
+rollBackOnError action = do
+    ret <- action
+    if not ret
+    then Db.transactionUndo
+    else pure ()
+    pure ret
+
+getDirUploaders ::
+  ( Db.MonadConnection m
+  , Db.Backend m ~ backend
+  , Db.MonadReadDirectory (ReaderT backend m)
+  , Db.MonadDirectoryUploader (ReaderT backend m)
+  , Db.MonadReadUser (ReaderT backend m)
+  )
+  => User -- ^me
+  -> UserName
+  -> DirectoryName
+  -> m [UserName]
+getDirUploaders me ownerName dirName = 
+    Db.withConnection $ fmap extractMaybeList $ runMaybeT $
+      if (me ^. user_name == ownerName) || (me ^. user_role) == RoleAdmin
+      then do
+        dirId <- MaybeT $ Db.getDirectoryId (convert ownerName) (convert dirName)
+        userIds <- lift $ Db.getDirUploaders dirId
+        for userIds $ \userId -> do
+          name <- fmap Db.userName (MaybeT $ Db.getUserById userId)
+          pure (UserName name)
+      else MaybeT $ pure Nothing
+
+extractMaybeList :: Maybe [a] -> [a]
+extractMaybeList Nothing = []
+extractMaybeList (Just xs) = xs

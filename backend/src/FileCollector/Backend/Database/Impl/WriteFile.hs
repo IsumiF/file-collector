@@ -5,7 +5,6 @@ module FileCollector.Backend.Database.Impl.WriteFile
   ) where
 
 import FileCollector.Backend.Database.Impl.Internal.Prelude
-import FileCollector.Backend.Database.Types.File
 
 deleteFile :: MonadSqlDb m
            => FileId

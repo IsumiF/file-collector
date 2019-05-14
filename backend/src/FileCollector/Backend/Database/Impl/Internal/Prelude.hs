@@ -11,6 +11,7 @@ module FileCollector.Backend.Database.Impl.Internal.Prelude
   , sqlQQ
   , MonadSqlDb
   , entityToTuple
+  , module FileCollector.Backend.Database.Types
   ) where
 
 import Control.Monad.IO.Class
@@ -18,6 +19,7 @@ import Control.Monad.Reader
 import Data.Text (Text)
 import Database.Persist
 import Database.Persist.Sql (SqlBackend, rawSql, sqlQQ)
+import FileCollector.Backend.Database.Types
 
 type MonadSqlDb m = (MonadIO m, MonadReader SqlBackend m)
 

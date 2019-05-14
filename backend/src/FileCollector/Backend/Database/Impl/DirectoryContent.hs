@@ -5,8 +5,6 @@ module FileCollector.Backend.Database.Impl.DirectoryContent
   ) where
 
 import FileCollector.Backend.Database.Impl.Internal.Prelude
-import FileCollector.Backend.Database.Types.Directory
-import FileCollector.Backend.Database.Types.File
 
 getDirectoryContent :: MonadSqlDb m
                     => DirectoryId

@@ -29,6 +29,7 @@ handlerDir ossProvider =
   :<|> handlerGetDir
   :<|> handlerPutDir
   :<|> handlerDeleteDir ossProvider
+  :<|> handlerDirUploaders
   :<|> undefined
 
 handlerGetDirList :: ServerT ApiGetDirList AppHandler
@@ -55,10 +56,25 @@ handlerDeleteDir :: MonadOssService provider App
                  => Proxy provider
                  -> ServerT ApiDeleteDir AppHandler
 handlerDeleteDir ossProvider (UserCollector me) ownerName dirName = do
-    status <- lift $ Core.deleteDirectory ossProvider me ownerName dirName
+    status <- Core.deleteDirectory ossProvider me ownerName dirName
     case status of
       Right _ -> pure Common.DdrFullyDeleted
       Left err ->
         case err of
           Core.DdeNoSuchDirectory -> throwError err404
           Core.DdePartiallyDeleted -> pure Common.DdrPartiallyDeleted
+
+handlerDirUploaders :: ServerT ApiDirUploaders AppHandler
+handlerDirUploaders (UserCollector user) ownerName dirName =
+    putDirUploaders
+    :<|> getDirUploaders
+  where
+    putDirUploaders :: [Common.UserName] -> AppHandler ()
+    putDirUploaders newUploaders = do
+      ret <- Core.putDirUploaders user ownerName dirName newUploaders
+      if not ret
+      then throwError err404
+      else pure ()
+
+    getDirUploaders :: AppHandler [Common.UserName]
+    getDirUploaders = Core.getDirUploaders user ownerName dirName

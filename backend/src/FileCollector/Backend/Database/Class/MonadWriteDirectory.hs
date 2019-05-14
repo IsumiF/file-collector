@@ -7,7 +7,6 @@ module FileCollector.Backend.Database.Class.MonadWriteDirectory
 
 import FileCollector.Backend.Database.Class.Internal.Prelude
 import FileCollector.Backend.Database.Class.MonadReadDirectory
-import FileCollector.Backend.Database.Types.Directory
 import qualified FileCollector.Backend.Database.Impl.WriteDirectory as Impl
 
 class MonadReadDirectory m => MonadWriteDirectory m where

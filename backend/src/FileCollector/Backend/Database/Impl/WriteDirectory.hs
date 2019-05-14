@@ -6,7 +6,6 @@ module FileCollector.Backend.Database.Impl.WriteDirectory
   ) where
 
 import FileCollector.Backend.Database.Impl.Internal.Prelude
-import FileCollector.Backend.Database.Types.Directory
 
 updateDirectory :: MonadSqlDb m
                 => DirectoryId
