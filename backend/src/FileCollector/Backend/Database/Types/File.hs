@@ -7,6 +7,7 @@ module FileCollector.Backend.Database.Types.File
     , FileHashValue
     , FileUploader
     , FileDirectory
+    , FileLastModified
     , FileRawPath
     )
   ) where

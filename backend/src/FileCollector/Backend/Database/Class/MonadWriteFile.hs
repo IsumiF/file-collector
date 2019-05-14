@@ -12,3 +12,9 @@ class Monad m => MonadWriteFile m where
 
 instance MonadIO m => MonadWriteFile (ReaderT SqlBackend m) where
   deleteFile = Impl.deleteFile
+
+instance MonadWriteFile m => MonadWriteFile (MaybeT m) where
+  deleteFile = lift . deleteFile
+
+instance MonadWriteFile m => MonadWriteFile (ExceptT e m) where
+  deleteFile = lift . deleteFile

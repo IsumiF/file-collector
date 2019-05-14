@@ -16,6 +16,7 @@ module FileCollector.Backend.Core.File
   , DeleteDirectoryError(..)
   , putDirUploaders 
   , getDirUploaders
+  , getDirContent
     -- * Inner functions
   , dirDbToCommon
   , dirCommonToDb
@@ -38,14 +39,10 @@ import qualified FileCollector.Backend.Database.Class.MonadReadUser as Db
 import qualified FileCollector.Backend.Database.Class.MonadWriteDirectory as Db
 import qualified FileCollector.Backend.Database.Class.MonadWriteFile as Db
 import qualified FileCollector.Backend.Database.Class.MonadDirectoryUploader as Db
-import qualified FileCollector.Backend.Database.Types.Directory as Db
-import qualified FileCollector.Backend.Database.Types.File as Db
-import qualified FileCollector.Backend.Database.Types.UploadRule as Db
-import qualified FileCollector.Backend.Database.Types.User as Db
+import qualified FileCollector.Backend.Database.Types as Db
 import qualified FileCollector.Backend.Oss.Class.MonadOssService as Oss
 import           FileCollector.Common.Base.Convertible
-import           FileCollector.Common.Types.Directory
-import           FileCollector.Common.Types.User
+import           FileCollector.Common.Types
 
 getVisibleDirectories ::
   ( Db.MonadConnection m
@@ -306,3 +303,50 @@ getDirUploaders me ownerName dirName =
 extractMaybeList :: Maybe [a] -> [a]
 extractMaybeList Nothing = []
 extractMaybeList (Just xs) = xs
+
+getDirContent ::
+  ( Db.MonadConnection m
+  , Db.Backend m ~ backend
+  , Db.MonadReadUser (ReaderT backend m)
+  , Db.MonadReadDirectory (ReaderT backend m)
+  , Db.MonadDirectoryUploader (ReaderT backend m)
+  , Db.MonadDirectoryContent (ReaderT backend m)
+  )
+  => User
+  -> UserName
+  -> DirectoryName
+  -> m [File]
+getDirContent me ownerName dirName =
+    Db.withConnection $ fmap extractMaybeList $ runMaybeT $ do
+      dirId <- MaybeT $ Db.getDirectoryId (convert ownerName) (convert dirName)
+      meId <- MaybeT $ Db.getIdByUserName (convert $ me ^. user_name)
+      es <- case me ^. user_role of
+        RoleUploader -> do
+          dirHasUploader <- Db.dirHasUploader dirId meId
+          maybeTJustIf dirHasUploader $
+            Db.getDirectoryContentOfUploader dirId meId
+        RoleCollector ->
+          maybeTJustIf (me ^. user_name == ownerName) $
+            Db.getDirectoryContent dirId
+        RoleAdmin -> Db.getDirectoryContent dirId
+      traverse (MaybeT . fileDbToCommon . snd)  es
+
+fileDbToCommon ::
+  Db.MonadReadUser m
+  => Db.File
+  -> m (Maybe File)
+fileDbToCommon dbFile = runMaybeT $ do
+    let uploaderId = Db.fileUploader dbFile
+    uploader <- MaybeT $ Db.getUserById uploaderId
+    let uploaderName = Db.userName uploader
+    pure $ File
+      (convert $ Db.fileName dbFile)
+      (convert uploaderName)
+      (convert $ Db.fileHashValue dbFile)
+      (Db.fileLastModified dbFile)
+
+maybeTJustIf :: Monad m
+             => Bool
+             -> m a
+             -> MaybeT m a
+maybeTJustIf p action = if p then lift action else MaybeT (pure Nothing)

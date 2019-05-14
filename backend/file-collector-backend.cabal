@@ -70,14 +70,15 @@ library
       FileCollector.Backend.Handler.Impl.User
       FileCollector.Backend.Handler.Impl.File
       FileCollector.Backend.Database
+      FileCollector.Backend.Database.Types
       FileCollector.Backend.Database.Types.Internal
       FileCollector.Backend.Database.Types.User
       FileCollector.Backend.Database.Types.Role
       FileCollector.Backend.Database.Types.UploadRule
       FileCollector.Backend.Database.Types.Directory
       FileCollector.Backend.Database.Types.File
+      FileCollector.Backend.Database.Types.HashValue
       FileCollector.Backend.Database.Types.CanUploadTo
-      FileCollector.Backend.Database.Types
       FileCollector.Backend.Database.Class.MonadConnection
       FileCollector.Backend.Database.Class.MonadReadUser
       FileCollector.Backend.Database.Class.MonadReadDirectory

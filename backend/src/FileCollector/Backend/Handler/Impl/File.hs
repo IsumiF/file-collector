@@ -30,6 +30,7 @@ handlerDir ossProvider =
   :<|> handlerPutDir
   :<|> handlerDeleteDir ossProvider
   :<|> handlerDirUploaders
+  :<|> handlerDirContent
   :<|> undefined
 
 handlerGetDirList :: ServerT ApiGetDirList AppHandler
@@ -78,3 +79,6 @@ handlerDirUploaders (UserCollector user) ownerName dirName =
 
     getDirUploaders :: AppHandler [Common.UserName]
     getDirUploaders = Core.getDirUploaders user ownerName dirName
+
+handlerDirContent :: ServerT ApiGetDirContent AppHandler
+handlerDirContent (UserUploader me) = Core.getDirContent me

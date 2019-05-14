@@ -10,7 +10,7 @@ import Data.Text (Text)
 import Database.Persist (entityKey, entityVal, get, getBy)
 import Database.Persist.Sql (SqlBackend)
 
-import FileCollector.Backend.Database.Types.User
+import FileCollector.Backend.Database.Class.Internal.Prelude
 
 class Monad m => MonadReadUser m where
   getUserByName :: Text -> m (Maybe User)
@@ -23,5 +23,17 @@ instance MonadIO m => MonadReadUser (ReaderT SqlBackend m) where
     pure $ fmap entityVal maybeEntityUser
 
   getUserById = get
-  
+
   getIdByUserName name = (fmap . fmap) entityKey (getBy (UniqueUserName name))
+
+instance MonadReadUser m =>
+    MonadReadUser (MaybeT m) where
+  getUserByName = lift . getUserByName
+  getUserById = lift . getUserById
+  getIdByUserName = lift . getIdByUserName
+
+instance MonadReadUser m =>
+    MonadReadUser (ExceptT e m) where
+  getUserByName = lift . getUserByName
+  getUserById = lift . getUserById
+  getIdByUserName = lift . getIdByUserName

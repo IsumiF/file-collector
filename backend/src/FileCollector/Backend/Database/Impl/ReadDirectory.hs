@@ -10,6 +10,7 @@ module FileCollector.Backend.Database.Impl.ReadDirectory
   , getVisibleDirectories
   , getAllDirectories
   , isDirectoryVisible
+  , getDirectoryById
   ) where
 
 import Data.Maybe (isJust)
@@ -85,3 +86,9 @@ isDirectoryVisible username dirId = liftPersist $ do
         maybeEntity <- selectFirst
           [CanUploadToUser ==. userId, CanUploadToDirectory ==. dirId] []
         pure $ isJust maybeEntity
+
+getDirectoryById ::
+     MonadSqlDb m
+  => DirectoryId
+  -> m (Maybe Directory)
+getDirectoryById dirId = liftPersist $ get dirId

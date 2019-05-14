@@ -4,7 +4,10 @@ module FileCollector.Backend.Database.Impl.DirectoryUploader
   ( deleteAllUploadersOfDir
   , addUploaderToDir
   , getDirUploaders
+  , dirHasUploader
   ) where
+
+import Data.Maybe (isJust)
 
 import FileCollector.Backend.Database.Impl.Internal.Prelude
 
@@ -28,3 +31,12 @@ getDirUploaders :: MonadSqlDb m
 getDirUploaders dirId = liftPersist $ do
     es <- selectList [CanUploadToDirectory ==. dirId] []
     pure $ fmap (canUploadToUser . entityVal) es
+
+dirHasUploader :: MonadSqlDb m
+               => DirectoryId
+               -> UserId
+               -> m Bool
+dirHasUploader dirId userId = liftPersist $ do
+    maybeEntity <- selectFirst
+      [CanUploadToUser ==. userId, CanUploadToDirectory ==. dirId] []
+    pure $ isJust maybeEntity

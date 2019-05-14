@@ -1,5 +1,6 @@
 {-# LANGUAGE EmptyDataDecls             #-}
 {-# LANGUAGE FlexibleContexts           #-}
+{-# LANGUAGE FlexibleInstances          #-}
 {-# LANGUAGE GADTs                      #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE MultiParamTypeClasses      #-}
@@ -7,7 +8,6 @@
 {-# LANGUAGE QuasiQuotes                #-}
 {-# LANGUAGE TemplateHaskell            #-}
 {-# LANGUAGE TypeFamilies               #-}
-{-# LANGUAGE FlexibleInstances #-}
 
 module FileCollector.Backend.Database.Types.Internal
   ( migrateAll
@@ -36,6 +36,7 @@ module FileCollector.Backend.Database.Types.Internal
     , FileHashValue
     , FileUploader
     , FileDirectory
+    , FileLastModified
     , FileRawPath
     , CanUploadToId
     , CanUploadToUser
@@ -50,6 +51,7 @@ import Database.Persist (EntityField, Unique)
 import Database.Persist.TH
     (mkMigrate, mkPersist, persistLowerCase, share, sqlSettings)
 
+import           FileCollector.Backend.Database.Types.HashValue
 import           FileCollector.Backend.Database.Types.Role
 import           FileCollector.Backend.Database.Types.UploadRule (UploadRule)
 import           FileCollector.Common.Base.Convertible
@@ -71,9 +73,10 @@ Directory
   deriving Show Eq
 File
   name Text
-  hashValue ByteString
+  hashValue HashValue
   uploader UserId
   directory DirectoryId
+  lastModified UTCTime
   rawPath ByteString
   UniqueFile directory uploader name
   deriving Show
