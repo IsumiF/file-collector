@@ -14,9 +14,10 @@ module FileCollector.Backend.Core.File
   , UpdateDirectoryError(..)
   , deleteDirectory
   , DeleteDirectoryError(..)
-  , putDirUploaders 
+  , putDirUploaders
   , getDirUploaders
   , getDirContent
+  , getFile
     -- * Inner functions
   , dirDbToCommon
   , dirCommonToDb
@@ -27,18 +28,19 @@ import Control.Monad.Logger
 import Control.Monad.Reader
 import Control.Monad.Trans.Except
 import Control.Monad.Trans.Maybe
+import Data.Maybe (isJust)
 import Data.Proxy (Proxy (..))
 import Data.String.Interpolate (i)
 import Data.Traversable (for)
-import Data.Maybe (isJust)
 
 import qualified FileCollector.Backend.Database.Class.MonadConnection as Db
 import qualified FileCollector.Backend.Database.Class.MonadDirectoryContent as Db
+import qualified FileCollector.Backend.Database.Class.MonadDirectoryUploader as Db
 import qualified FileCollector.Backend.Database.Class.MonadReadDirectory as Db
+import qualified FileCollector.Backend.Database.Class.MonadReadFile as Db
 import qualified FileCollector.Backend.Database.Class.MonadReadUser as Db
 import qualified FileCollector.Backend.Database.Class.MonadWriteDirectory as Db
 import qualified FileCollector.Backend.Database.Class.MonadWriteFile as Db
-import qualified FileCollector.Backend.Database.Class.MonadDirectoryUploader as Db
 import qualified FileCollector.Backend.Database.Types as Db
 import qualified FileCollector.Backend.Oss.Class.MonadOssService as Oss
 import           FileCollector.Common.Base.Convertible
@@ -229,7 +231,7 @@ deleteDirectory _ me ownerName dirName =
 
       deleteStatList <- for files $ \(fileId, file) -> do
         let rawPath = Db.fileRawPath file
-        let path = convert rawPath :: Oss.FileName provider
+        let path = Oss.fromRawFileName rawPath :: Oss.FileName provider
         deleteStatus <- Oss.deleteFile path
         if deleteStatus
         then lift $ Db.deleteFile fileId
@@ -254,7 +256,7 @@ putDirUploaders ::
   -> DirectoryName
   -> [UserName]
   -> m Bool
-putDirUploaders me ownerName dirName newUploaders = 
+putDirUploaders me ownerName dirName newUploaders =
     Db.withConnection $ rollBackOnError $ fmap isJust $ runMaybeT $
       if (me ^. user_name == ownerName) || (me ^. user_role) == RoleAdmin
       then do
@@ -289,7 +291,7 @@ getDirUploaders ::
   -> UserName
   -> DirectoryName
   -> m [UserName]
-getDirUploaders me ownerName dirName = 
+getDirUploaders me ownerName dirName =
     Db.withConnection $ fmap extractMaybeList $ runMaybeT $
       if (me ^. user_name == ownerName) || (me ^. user_role) == RoleAdmin
       then do
@@ -301,7 +303,7 @@ getDirUploaders me ownerName dirName =
       else MaybeT $ pure Nothing
 
 extractMaybeList :: Maybe [a] -> [a]
-extractMaybeList Nothing = []
+extractMaybeList Nothing   = []
 extractMaybeList (Just xs) = xs
 
 getDirContent ::
@@ -349,4 +351,49 @@ maybeTJustIf :: Monad m
              => Bool
              -> m a
              -> MaybeT m a
-maybeTJustIf p action = if p then lift action else MaybeT (pure Nothing)
+maybeTJustIf p action = maybeTJustIf' p (lift action)
+
+maybeTJustIf' :: Monad m
+              => Bool
+              -> MaybeT m a
+              -> MaybeT m a
+maybeTJustIf' p action = if p then action else MaybeT (pure Nothing)
+
+getFile ::
+  forall m backend ossProvider.
+  ( Db.MonadConnection m
+  , Db.Backend m ~ backend
+  , Db.MonadReadFile (ReaderT backend m)
+  , Db.MonadReadUser (ReaderT backend m)
+  , Oss.MonadOssService ossProvider m
+  )
+  => User -- ^me
+  -> UserName -- ^owner name
+  -> DirectoryName -- ^directory name
+  -> UserName -- ^uploader name
+  -> FileName -- ^file name
+  -> Bool -- ^whether to return credential
+  -> m (Maybe (File, Maybe (OssClientCredential ossProvider)))
+getFile me ownerName dirName uploaderName fileName' returnCred =
+    Db.withConnection $ runMaybeT $
+      maybeTJustIf' authorized $ do
+        fileId <- MaybeT $ Db.getFileId
+          (convert ownerName)
+          (convert dirName)
+          (convert uploaderName)
+          (convert fileName')
+        dbFile <- MaybeT $ Db.getFileById fileId
+        file <- MaybeT $ fileDbToCommon dbFile
+        maybeCred <-
+          if returnCred
+          then do
+            let rawPath = Db.fileRawPath dbFile
+                ossFileName = Oss.fromRawFileName rawPath :: Oss.FileName ossProvider
+            runMaybeT . exceptToMaybeT . ExceptT $ Oss.getDownloadCredential ossFileName
+          else pure Nothing
+        pure (file, maybeCred)
+  where
+    authorized =
+         me ^. user_name == ownerName && me ^. user_role == RoleCollector
+      || me ^. user_name == uploaderName
+      || me ^. user_role == RoleAdmin

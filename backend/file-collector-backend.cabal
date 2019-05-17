@@ -86,6 +86,7 @@ library
       FileCollector.Backend.Database.Class.MonadDirectoryContent
       FileCollector.Backend.Database.Class.MonadWriteFile
       FileCollector.Backend.Database.Class.MonadDirectoryUploader
+      FileCollector.Backend.Database.Class.MonadReadFile
       FileCollector.Backend.Database.Class.Internal.Prelude
       FileCollector.Backend.Database.Impl.Internal.Prelude
       FileCollector.Backend.Database.Impl.ReadDirectory
@@ -93,6 +94,7 @@ library
       FileCollector.Backend.Database.Impl.DirectoryContent
       FileCollector.Backend.Database.Impl.WriteFile
       FileCollector.Backend.Database.Impl.DirectoryUploader
+      FileCollector.Backend.Database.Impl.ReadFile
       FileCollector.Backend.Oss.Class.MonadOssService
       FileCollector.Backend.Oss.Class.MonadReadAliyunConfig
       FileCollector.Backend.Oss.Aliyun

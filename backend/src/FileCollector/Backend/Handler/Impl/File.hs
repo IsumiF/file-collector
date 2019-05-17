@@ -31,7 +31,9 @@ handlerDir ossProvider =
   :<|> handlerDeleteDir ossProvider
   :<|> handlerDirUploaders
   :<|> handlerDirContent
-  :<|> undefined
+  :<|> handlerGetFile ossProvider
+  :<|> handlerPutFile ossProvider
+  :<|> handlerDeleteFile ossProvider
 
 handlerGetDirList :: ServerT ApiGetDirList AppHandler
 handlerGetDirList (UserUploader user) =
@@ -82,3 +84,22 @@ handlerDirUploaders (UserCollector user) ownerName dirName =
 
 handlerDirContent :: ServerT ApiGetDirContent AppHandler
 handlerDirContent (UserUploader me) = Core.getDirContent me
+
+handlerGetFile :: MonadOssService ossProvider App
+               => Proxy ossProvider
+               -> ServerT (ApiGetFile ossProvider) AppHandler
+handlerGetFile _ (UserUploader user) ownerName dirName uploaderName fileName returnCred = do
+    maybeResult <- Core.getFile user ownerName dirName uploaderName fileName returnCred
+    case maybeResult of
+      Nothing -> throwError err404
+      Just result -> pure result
+
+handlerPutFile :: MonadOssService ossProvider App
+               => Proxy ossProvider
+               -> ServerT (ApiPutFile ossProvider) AppHandler
+handlerPutFile _ = undefined -- TODO
+
+handlerDeleteFile :: MonadOssService ossProvider App
+                  => Proxy ossProvider
+                  -> ServerT ApiDeleteFile AppHandler
+handlerDeleteFile _ = undefined -- TODO
