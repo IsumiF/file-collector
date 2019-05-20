@@ -20,7 +20,9 @@ module FileCollector.Backend.Database.Types.Internal
   , FileId
   , CanUploadTo(..)
   , CanUploadToId
-  , Unique (UniqueUserName, UniqueOwnerDir, UniqueFile)
+  , PendingUploadFile(..)
+  , PendingUploadFileId
+  , Unique (UniqueUserName, UniqueOwnerDir, UniqueFile, UniquePendingUploadFile)
   , EntityField
     ( UserId
     , UserName
@@ -41,6 +43,12 @@ module FileCollector.Backend.Database.Types.Internal
     , CanUploadToId
     , CanUploadToUser
     , CanUploadToDirectory
+    , PendingUploadFileName
+    , PendingUploadFileNewName
+    , PendingUploadFileUploader
+    , PendingUploadFileDirectory
+    , PendingUploadFileRequestTime
+    , PendingUploadFileRawPath
     )
   ) where
 
@@ -83,6 +91,15 @@ File
 CanUploadTo
   user UserId
   directory DirectoryId
+  deriving Show
+PendingUploadFile
+  name Text 
+  newName Text Maybe
+  uploader UserId
+  directory DirectoryId
+  requestTime UTCTime
+  rawPath ByteString
+  UniquePendingUploadFile name uploader directory
   deriving Show
 |]
 

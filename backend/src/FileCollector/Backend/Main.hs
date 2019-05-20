@@ -28,7 +28,7 @@ import qualified FileCollector.Backend.Database as Database (initialize)
 import           FileCollector.Backend.Handler
     (handler, makeAuthCheck, toHandler)
 import           FileCollector.Backend.Logger (withLogStdout)
-import qualified FileCollector.Backend.Oss.Aliyun as Aliyun
+import qualified FileCollector.Backend.Oss.Impl.Aliyun as Aliyun
 import           FileCollector.Common.Api (Api)
 import           FileCollector.Common.Api.Auth
     (UserAdmin, UserCollector, UserUploader)

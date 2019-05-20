@@ -2,13 +2,13 @@ module FileCollector.Backend.Oss.Class.MonadReadAliyunConfig
   ( MonadReadAliyunConfig(..)
   ) where
 
-import Data.Text (Text)
-import Control.Monad.Reader (ask)
 import Control.Lens
+import Control.Monad.Reader (ask)
+import Data.Text (Text)
 
-import FileCollector.Backend.Oss.Aliyun
 import FileCollector.Backend.App
 import FileCollector.Backend.Config
+import FileCollector.Backend.Oss.Impl.Aliyun.Internal
 
 class Monad m => MonadReadAliyunConfig m where
   getAccessKey :: m AccessKey

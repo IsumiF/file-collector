@@ -30,6 +30,8 @@ library
       FileCollector.Common.Types.OssProviderImpl.Aliyun
       FileCollector.Common.Types.JsonByteString
       FileCollector.Common.Types.DirectoryDeleteResult
+      FileCollector.Common.Types.FullFilePath
+      FileCollector.Common.Types.PutFileFailure
       FileCollector.Common.Base.Convertible
       FileCollector.Common.Base.MonadConvertible
       FileCollector.Common.Base.Aeson

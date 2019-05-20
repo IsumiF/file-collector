@@ -1,7 +1,7 @@
 {-# LANGUAGE ForeignFunctionInterface #-}
 {-# LANGUAGE TemplateHaskell          #-}
 
-module FileCollector.Backend.Oss.Aliyun.Internal
+module FileCollector.Backend.Oss.Impl.Aliyun.Internal
   ( initialize
   , deinitialize
   , getUploadUrl

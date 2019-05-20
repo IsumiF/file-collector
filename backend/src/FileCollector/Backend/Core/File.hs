@@ -18,30 +18,36 @@ module FileCollector.Backend.Core.File
   , getDirUploaders
   , getDirContent
   , getFile
+  , putFile
     -- * Inner functions
   , dirDbToCommon
   , dirCommonToDb
   ) where
 
-import Control.Lens
-import Control.Monad.Logger
-import Control.Monad.Reader
-import Control.Monad.Trans.Except
-import Control.Monad.Trans.Maybe
-import Data.Maybe (isJust)
-import Data.Proxy (Proxy (..))
-import Data.String.Interpolate (i)
-import Data.Traversable (for)
+import           Control.Lens
+import           Control.Monad.Logger
+import           Control.Monad.Reader
+import           Control.Monad.Trans.Except
+import           Control.Monad.Trans.Maybe
+import           Data.ByteString (ByteString)
+import           Data.Maybe (isJust, fromMaybe)
+import           Data.Proxy (Proxy (..))
+import           Data.String.Interpolate (i)
+import           Data.Traversable (for)
+import qualified Data.UUID as UUID
 
 import qualified FileCollector.Backend.Database.Class.MonadConnection as Db
 import qualified FileCollector.Backend.Database.Class.MonadDirectoryContent as Db
 import qualified FileCollector.Backend.Database.Class.MonadDirectoryUploader as Db
+import qualified FileCollector.Backend.Database.Class.MonadPendingUploadFile as Db
 import qualified FileCollector.Backend.Database.Class.MonadReadDirectory as Db
 import qualified FileCollector.Backend.Database.Class.MonadReadFile as Db
 import qualified FileCollector.Backend.Database.Class.MonadReadUser as Db
 import qualified FileCollector.Backend.Database.Class.MonadWriteDirectory as Db
 import qualified FileCollector.Backend.Database.Class.MonadWriteFile as Db
 import qualified FileCollector.Backend.Database.Types as Db
+import           FileCollector.Backend.IO.Time.Class.MonadCurrentTime
+import           FileCollector.Backend.IO.UUID.Class.MonadUUID
 import qualified FileCollector.Backend.Oss.Class.MonadOssService as Oss
 import           FileCollector.Common.Base.Convertible
 import           FileCollector.Common.Types
@@ -230,8 +236,7 @@ deleteDirectory _ me ownerName dirName =
       files <- lift $ Db.getDirectoryContent dirId
 
       deleteStatList <- for files $ \(fileId, file) -> do
-        let rawPath = Db.fileRawPath file
-        let path = Oss.fromRawFileName rawPath :: Oss.FileName provider
+        let path = Oss.fromRawPath (Db.fileRawPath file) :: Oss.FileName provider
         deleteStatus <- Oss.deleteFile path
         if deleteStatus
         then lift $ Db.deleteFile fileId
@@ -365,6 +370,7 @@ getFile ::
   , Db.Backend m ~ backend
   , Db.MonadReadFile (ReaderT backend m)
   , Db.MonadReadUser (ReaderT backend m)
+  , Db.MonadReadDirectory (ReaderT backend m)
   , Oss.MonadOssService ossProvider m
   )
   => User -- ^me
@@ -386,10 +392,9 @@ getFile me ownerName dirName uploaderName fileName' returnCred =
         file <- MaybeT $ fileDbToCommon dbFile
         maybeCred <-
           if returnCred
-          then do
-            let rawPath = Db.fileRawPath dbFile
-                ossFileName = Oss.fromRawFileName rawPath :: Oss.FileName ossProvider
-            runMaybeT . exceptToMaybeT . ExceptT $ Oss.getDownloadCredential ossFileName
+          then runMaybeT $ do
+            let ossFileName = Oss.fromRawPath (Db.fileRawPath dbFile)
+            exceptToMaybeT . ExceptT $ Oss.getDownloadCredential ossFileName
           else pure Nothing
         pure (file, maybeCred)
   where
@@ -397,3 +402,108 @@ getFile me ownerName dirName uploaderName fileName' returnCred =
          me ^. user_name == ownerName && me ^. user_role == RoleCollector
       || me ^. user_name == uploaderName
       || me ^. user_role == RoleAdmin
+
+{-| 上传文件。返回上传证书，把文件加入PendingUploadFile表
+
+该函数包含多种功能：
+- 创建文件。如果使用给定文件名找不到文件，则忽略新文件名，直接按照原文件名创建文件
+- 覆盖已有文件。使用给定文件名能够找到文件，并且新文件名为@Nothing@或者和原文件名相同，则覆盖该文件
+- 重命名文件。使用给定文件名能找到文件，并且新文件名不同，则覆盖并重命名文件
+-}
+putFile ::
+  ( Db.MonadConnection m
+  , Db.Backend m ~ backend
+  , Db.MonadReadDirectory (ReaderT backend m)
+  , Db.MonadReadFile (ReaderT backend m)
+  , Db.MonadDirectoryUploader (ReaderT backend m)
+  , Db.MonadReadUser (ReaderT backend m)
+  , Db.MonadPendingUploadFile (ReaderT backend m)
+  , Oss.MonadOssService ossProvider m
+  , MonadCurrentTime m
+  , MonadUUID m
+  )
+  => User -- ^current user
+  -> UserName -- ^owner name
+  -> DirectoryName -- ^directory name
+  -> UserName -- ^uploader name
+  -> FileName -- ^file name
+  -> Maybe FileName -- ^new file name
+  -> m (Either PutFileFailure (OssClientCredential ossProvider))
+putFile me ownerName dirName uploaderName fileName' newFileName =
+    Db.withConnection $ runExceptT $ do
+      dirId <- maybeToExceptT PutFileDirNotExist $ MaybeT $
+        Db.getDirectoryId (convert ownerName) (convert dirName)
+      userId <- maybeToExceptT PutFilePermissionDenied $ MaybeT $
+        Db.getIdByUserName (convert $ me ^. user_name)
+      authorized <-
+        (me ^. user_name == uploaderName &&) <$>
+          case me ^. user_role of
+            RoleAdmin     -> pure True
+            RoleCollector -> pure $ me ^. user_name == ownerName
+            RoleUploader  -> Db.dirHasUploader dirId userId
+      if not authorized
+      then throwE PutFilePermissionDenied
+      else do
+        fileId <- Db.getFileId (convert ownerName) (convert dirName) (convert uploaderName) (convert fileName')
+        file <- join <$> traverse Db.getFileById fileId
+        let rawPath = fmap Db.fileRawPath file
+        maybeToExceptT PutFileSystemTooBusy $ MaybeT $
+          putPendingUploadFile fileName' userId dirId newFileName rawPath
+
+putPendingUploadFile ::
+  ( Db.MonadPendingUploadFile m
+  , MonadCurrentTime m
+  , Oss.MonadOssService oss m
+  , MonadUUID m
+  )
+  => FileName
+  -> Db.UserId
+  -> Db.DirectoryId
+  -> Maybe FileName
+  -> Maybe ByteString -- ^existing raw path in database
+  -> m (Maybe (OssClientCredential oss))
+putPendingUploadFile fileName uploaderId dirId newFileName rawPath = runMaybeT $ do
+    let pendingKey = Db.UniquePendingUploadFile (convert fileName) uploaderId dirId
+    pendingEntry <- Db.getPendingUploadFile pendingKey
+    rawPath' <- 
+      case pendingEntry of
+        Just pendingEntry' -> do
+          updateExistingPendingFile fileName uploaderId dirId newFileName
+          pure $ Db.pendingUploadFileRawPath pendingEntry'
+        Nothing -> do
+          uuid <- MaybeT nextUUID
+          let rawPath' = fromMaybe (UUID.toASCIIBytes uuid) rawPath
+          addNewPendingFile fileName uploaderId dirId newFileName rawPath'
+          pure rawPath'
+    exceptToMaybeT $ ExceptT $ Oss.getUploadCredential (Oss.fromRawPath rawPath')
+
+addNewPendingFile ::
+  ( Db.MonadPendingUploadFile m
+  , MonadCurrentTime m
+  )
+  => FileName -- ^file name
+  -> Db.UserId -- ^uploader
+  -> Db.DirectoryId -- ^the containing directory
+  -> Maybe FileName -- ^new file name
+  -> ByteString
+  -> m ()
+addNewPendingFile fileName uploaderId dirId newFileName rawPath = do
+    now <- currentTime
+    Db.addPendingUploadFile $ Db.PendingUploadFile
+      (convert fileName) (fmap convert newFileName) uploaderId dirId now rawPath
+
+updateExistingPendingFile ::
+  ( Db.MonadPendingUploadFile m
+  , MonadCurrentTime m
+  )
+  => FileName -- ^file name
+  -> Db.UserId -- ^uploader id
+  -> Db.DirectoryId -- ^directory id
+  -> Maybe FileName -- ^new name
+  -> m ()
+updateExistingPendingFile (FileName fileName) uploaderId dirId newFileName = do
+    now <- currentTime
+    Db.updatePendingUploadFile
+      (Db.UniquePendingUploadFile fileName uploaderId dirId)
+      (fmap convert newFileName)
+      now

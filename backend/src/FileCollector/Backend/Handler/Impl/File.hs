@@ -5,6 +5,7 @@ module FileCollector.Backend.Handler.Impl.File
   ) where
 
 import Servant
+import qualified Data.Aeson as Aeson
 
 import qualified FileCollector.Backend.Core.File as Core
 import           FileCollector.Backend.Handler.AppHandler
@@ -88,18 +89,28 @@ handlerDirContent (UserUploader me) = Core.getDirContent me
 handlerGetFile :: MonadOssService ossProvider App
                => Proxy ossProvider
                -> ServerT (ApiGetFile ossProvider) AppHandler
-handlerGetFile _ (UserUploader user) ownerName dirName uploaderName fileName returnCred = do
-    maybeResult <- Core.getFile user ownerName dirName uploaderName fileName returnCred
-    case maybeResult of
-      Nothing -> throwError err404
-      Just result -> pure result
+handlerGetFile _ (UserUploader user) ownerName dirName uploaderName fileName returnCred =
+    throw404OnNothing $
+      Core.getFile user ownerName dirName uploaderName fileName returnCred
 
 handlerPutFile :: MonadOssService ossProvider App
                => Proxy ossProvider
                -> ServerT (ApiPutFile ossProvider) AppHandler
-handlerPutFile _ = undefined -- TODO
+handlerPutFile _ (UserUploader me)
+  ownerName dirName uploaderName fileName newFileName = do
+    result <- Core.putFile me ownerName dirName uploaderName fileName newFileName
+    case result of
+      Left err -> throwError err404 { errBody = Aeson.encode err }
+      Right result' -> pure result'
 
 handlerDeleteFile :: MonadOssService ossProvider App
                   => Proxy ossProvider
                   -> ServerT ApiDeleteFile AppHandler
 handlerDeleteFile _ = undefined -- TODO
+
+throw404OnNothing :: AppHandler (Maybe a) -> AppHandler a
+throw404OnNothing action = do
+    maybeResult <- action
+    case maybeResult of
+      Nothing -> throwError err404
+      Just result -> pure result

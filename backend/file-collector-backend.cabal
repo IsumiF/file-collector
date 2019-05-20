@@ -44,6 +44,7 @@ common base
     , transformers-base ^>= 0.4.5.2
     , unliftio-core ^>= 0.1.2.0
     , string-interpolate ^>= 0.1.0.1
+    , uuid ^>= 1.3.13
 
 common exe-base
   import: base
@@ -79,6 +80,7 @@ library
       FileCollector.Backend.Database.Types.File
       FileCollector.Backend.Database.Types.HashValue
       FileCollector.Backend.Database.Types.CanUploadTo
+      FileCollector.Backend.Database.Types.PendingUploadFile
       FileCollector.Backend.Database.Class.MonadConnection
       FileCollector.Backend.Database.Class.MonadReadUser
       FileCollector.Backend.Database.Class.MonadReadDirectory
@@ -88,6 +90,7 @@ library
       FileCollector.Backend.Database.Class.MonadDirectoryUploader
       FileCollector.Backend.Database.Class.MonadReadFile
       FileCollector.Backend.Database.Class.Internal.Prelude
+      FileCollector.Backend.Database.Class.MonadPendingUploadFile
       FileCollector.Backend.Database.Impl.Internal.Prelude
       FileCollector.Backend.Database.Impl.ReadDirectory
       FileCollector.Backend.Database.Impl.WriteDirectory
@@ -95,10 +98,13 @@ library
       FileCollector.Backend.Database.Impl.WriteFile
       FileCollector.Backend.Database.Impl.DirectoryUploader
       FileCollector.Backend.Database.Impl.ReadFile
+      FileCollector.Backend.Database.Impl.PendingUploadFile
       FileCollector.Backend.Oss.Class.MonadOssService
       FileCollector.Backend.Oss.Class.MonadReadAliyunConfig
-      FileCollector.Backend.Oss.Aliyun
-      FileCollector.Backend.Oss.Aliyun.Internal
+      FileCollector.Backend.Oss.Impl.Aliyun
+      FileCollector.Backend.Oss.Impl.Aliyun.Internal
+      FileCollector.Backend.IO.Time.Class.MonadCurrentTime
+      FileCollector.Backend.IO.UUID.Class.MonadUUID
       FileCollector.Backend.Core.BasicAuth
       FileCollector.Backend.Core.User
       FileCollector.Backend.Core.Password
