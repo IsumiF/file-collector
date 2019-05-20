@@ -106,7 +106,8 @@ handlerPutFile _ (UserUploader me)
 handlerDeleteFile :: MonadOssService ossProvider App
                   => Proxy ossProvider
                   -> ServerT ApiDeleteFile AppHandler
-handlerDeleteFile _ = undefined -- TODO
+handlerDeleteFile p (UserUploader me) ownerName dirName uploaderName fileName = 
+    throw404OnNothing $ Core.deleteFile p me ownerName dirName uploaderName fileName
 
 throw404OnNothing :: AppHandler (Maybe a) -> AppHandler a
 throw404OnNothing action = do

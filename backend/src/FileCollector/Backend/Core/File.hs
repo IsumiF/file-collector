@@ -19,6 +19,7 @@ module FileCollector.Backend.Core.File
   , getDirContent
   , getFile
   , putFile
+  , deleteFile
     -- * Inner functions
   , dirDbToCommon
   , dirCommonToDb
@@ -507,3 +508,34 @@ updateExistingPendingFile (FileName fileName) uploaderId dirId newFileName = do
       (Db.UniquePendingUploadFile fileName uploaderId dirId)
       (fmap convert newFileName)
       now
+
+deleteFile ::
+  ( Db.MonadConnection m
+  , Db.Backend m ~ backend
+  , Oss.MonadOssService oss m
+  , Db.MonadReadDirectory (ReaderT backend m)
+  , Db.MonadReadFile (ReaderT backend m)
+  , Db.MonadWriteFile (ReaderT backend m)
+  , Db.MonadReadUser (ReaderT backend m)
+  , Db.MonadDirectoryUploader (ReaderT backend m)
+  )
+  => Proxy oss
+  -> User -- ^me
+  -> UserName -- ^dir owner name
+  -> DirectoryName -- ^dir name
+  -> UserName -- ^uploader name
+  -> FileName -- ^filename
+  -> m (Maybe ())
+deleteFile _ me dirOwner dirName uploaderName fileName =
+    Db.withConnection $ runMaybeT $ do
+      dirId <- MaybeT $ Db.getDirectoryId (convert dirOwner) (convert dirName)
+      fileId <- MaybeT $ Db.getFileId (convert dirOwner) (convert dirName) (convert uploaderName) (convert fileName)
+      userId <- MaybeT $ Db.getIdByUserName (convert $ me ^. user_name)
+      authorized <-
+        case me ^. user_role of
+          RoleUploader -> (me ^. user_name == uploaderName &&) <$> Db.dirHasUploader dirId userId
+          RoleCollector -> pure $ me ^. user_name == dirOwner
+          RoleAdmin -> pure True
+      if not authorized
+      then pure ()
+      else Db.deleteFile fileId
