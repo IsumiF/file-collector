@@ -20,6 +20,7 @@ module FileCollector.Backend.Core.File
   , getFile
   , putFile
   , deleteFile
+  , commitPutFile
     -- * Inner functions
   , dirDbToCommon
   , dirCommonToDb
@@ -539,3 +540,15 @@ deleteFile _ me dirOwner dirName uploaderName fileName =
       if not authorized
       then pure ()
       else Db.deleteFile fileId
+
+commitPutFile ::
+  ( Db.MonadConnection m
+  , Db.Backend m ~ backend
+  )
+  => User
+  -> UserName
+  -> DirectoryName
+  -> UserName
+  -> FileName
+  -> m (Maybe ())
+commitPutFile me ownerName dirName uploaderName fileName = undefined

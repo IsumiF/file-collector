@@ -35,6 +35,7 @@ handlerDir ossProvider =
   :<|> handlerGetFile ossProvider
   :<|> handlerPutFile ossProvider
   :<|> handlerDeleteFile ossProvider
+  :<|> handlerCommitPutFile ossProvider
 
 handlerGetDirList :: ServerT ApiGetDirList AppHandler
 handlerGetDirList (UserUploader user) =
@@ -115,3 +116,9 @@ throw404OnNothing action = do
     case maybeResult of
       Nothing -> throwError err404
       Just result -> pure result
+
+handlerCommitPutFile :: MonadOssService oss App
+                     => Proxy oss
+                     -> ServerT (ApiCommitPutFile oss) AppHandler
+handlerCommitPutFile _ (UserUploader me) ownerName dirName uploaderName fileName =
+    throw404OnNothing $ Core.commitPutFile me ownerName dirName uploaderName fileName

@@ -25,6 +25,7 @@ module FileCollector.Common.Api.File
   , ApiGetFile
   , ApiPutFile
   , ApiDeleteFile
+  , ApiCommitPutFile
     -- **Batch download
   , ApiBatchDownload
   ) where
@@ -53,6 +54,7 @@ type ApiDir ossProvider = "dir" :>
   :<|> ApiGetFile ossProvider
   :<|> ApiPutFile ossProvider
   :<|> ApiDeleteFile
+  :<|> ApiCommitPutFile ossProvider
   )
 
 -- | Get a list of directories
@@ -106,6 +108,13 @@ type ApiPutFile ossProvider =
 type ApiDeleteFile =
   AuthUploader
   :> CaptureUploaderAndFile (Delete '[JSON] ())
+
+type ApiCommitPutFile oss =
+  AuthUploader
+  :> CaptureUploaderAndFile
+    ( "commit" :> Put '[JSON] ()
+    )
+
 
 type CaptureOwnerAndDir api =
   Capture "ownerName" UserName

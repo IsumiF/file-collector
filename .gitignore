@@ -8,3 +8,4 @@ dist/
 .ghc.environment*
 *.local
 .stack-work/
+*.cabal
