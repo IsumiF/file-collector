@@ -62,9 +62,24 @@ executables:
     - file-collector-backend
 
 tests:
-  db:
+  db: &dbTest
     main: Main.hs
     source-dirs:
     - test/db
     build-tools:
-    - hspec-discover:hspec-discover
+    - hspec-discover:hspec-discover ^>= 2.5.5
+    dependencies:
+    - file-collector-backend
+    - file-collector-common
+    - hspec ^>= 2.5.5
+    - QuickCheck ^>= 2.11.3
+  integration:
+    <<: *dbTest
+    source-dirs:
+    - test/integration
+    dependencies:
+    - file-collector-backend
+    - file-collector-common
+    - hspec ^>= 2.5.5
+    - QuickCheck ^>= 2.11.3
+    - hspec-wai
