@@ -10,7 +10,8 @@ bool fc_aos_initialize()
     return aos_http_io_initialize(NULL, 0) == AOSE_OK;
 }
 
-void fc_aos_deinitialize() {
+void fc_aos_deinitialize()
+{
     aos_http_io_deinitialize();
 }
 
@@ -118,4 +119,40 @@ const char *fc_aos_getDownloadUrl(
         bucketName,
         objectName,
         HTTP_GET);
+}
+
+char *fc_aos_getFileMeta(
+    const char *accessKeyId,
+    const char *accessKeySecret,
+    const char *endPoint,
+    const char *bucketName,
+    const char *objectName)
+{
+    aos_pool_t *pool;
+    aos_pool_create(&pool, NULL);
+    oss_request_options_t *reqOptions =
+        initRequestOptions(pool, accessKeyId, accessKeySecret, endPoint);
+    aos_string_t bucket;
+    aos_string_t object;
+    aos_table_t *respHeaders = NULL;
+    aos_status_t *respStatus = NULL;
+    const char *lastModifiedStr = NULL;
+    aos_str_set(&bucket, bucketName);
+    aos_str_set(&object, objectName);
+    respStatus = oss_get_object_meta(reqOptions, &bucket, &object, &respHeaders);
+    char *lastModified = NULL;
+    if (aos_status_is_ok(respStatus))
+    {
+        printf("[DEBUG] OSS_DATE = %s\n", OSS_DATE);
+        lastModifiedStr = apr_table_get(respHeaders, "Last-Modified");
+        if (lastModifiedStr != NULL && lastModifiedStr[0] != '\0')
+        {
+            size_t len = strlen(lastModifiedStr);
+            lastModified = malloc(len + 1);
+            strcpy(lastModified, lastModifiedStr);
+        }
+    }
+    aos_pool_destroy(pool);
+
+    return lastModified;
 }

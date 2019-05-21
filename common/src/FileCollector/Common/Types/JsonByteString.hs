@@ -12,8 +12,6 @@ import qualified Data.Text.Encoding                     as Text (decodeUtf8,
                                                                  encodeUtf8)
 import           GHC.Generics                           (Generic)
 
-import           FileCollector.Common.Base.Convertible
-
 newtype JsonByteString = JsonByteString ByteString
   deriving (Eq, Show, Generic)
 

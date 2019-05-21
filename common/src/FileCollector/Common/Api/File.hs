@@ -1,3 +1,5 @@
+{-# OPTIONS_GHC -Wno-orphans #-}
+
 {-# LANGUAGE DataKinds           #-}
 {-# LANGUAGE FlexibleInstances   #-}
 {-# LANGUAGE LiberalTypeSynonyms #-}
@@ -30,8 +32,6 @@ module FileCollector.Common.Api.File
   , ApiBatchDownload
   ) where
 
-import           Data.Proxy (Proxy (..))
-import           Data.Text (Text)
 import           Servant.API
 import qualified Servant.Docs as Docs
 

@@ -1,3 +1,5 @@
+{-# OPTIONS_GHC -Wno-orphans #-}
+
 {-# LANGUAGE DataKinds         #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE TypeOperators     #-}
@@ -14,13 +16,12 @@ module FileCollector.Common.Api.User
   , ApiChangePasssword
   ) where
 
-import           Data.Text                           (Text)
 import           Servant.API
-import qualified Servant.Docs                        as Docs
+import qualified Servant.Docs as Docs
 
-import           FileCollector.Common.Api.Auth       (AuthAdmin, AuthUploader)
-import           FileCollector.Common.Types.Password (Password)
-import           FileCollector.Common.Types.User     (User, UserName)
+import FileCollector.Common.Api.Auth (AuthAdmin, AuthUploader)
+import FileCollector.Common.Types.Password (Password)
+import FileCollector.Common.Types.User (User, UserName)
 
 type Api = "user" :>
   ( ApiCreateUser

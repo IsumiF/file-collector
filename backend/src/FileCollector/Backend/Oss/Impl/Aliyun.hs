@@ -8,6 +8,8 @@ module FileCollector.Backend.Oss.Impl.Aliyun
   , Internal.AccessKey(..)
   , Internal.accessKey_id
   , Internal.accessKey_secret
+  , Internal.FileMetaInfo(..)
+  , Internal.fileMetaInfo_lastModified
   , module FileCollector.Common.Types.OssProviderImpl.Aliyun
   , AliyunFileName(..)
   , AliyunError(..)
@@ -15,6 +17,7 @@ module FileCollector.Backend.Oss.Impl.Aliyun
   , getUploadCredential
   , getDownloadCredential
   , deleteFile
+  , getFileMetaInfo
   ) where
 
 import           Control.Monad.IO.Class
@@ -59,3 +62,11 @@ deleteFile (AliyunFileName objectName) = do
     accessKey <- getAccessKey
     objId <- getObjectId objectName
     liftIO $ Internal.deleteFile accessKey objId
+
+getFileMetaInfo :: (MonadReadAliyunConfig m, MonadIO m)
+                => AliyunFileName
+                -> m (Maybe Internal.FileMetaInfo)
+getFileMetaInfo (AliyunFileName objectName) = do
+    accessKey <- getAccessKey
+    objId <- getObjectId objectName
+    liftIO $ Internal.getFileMetaInfo accessKey objId

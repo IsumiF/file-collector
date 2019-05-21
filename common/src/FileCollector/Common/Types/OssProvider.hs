@@ -7,12 +7,8 @@ module FileCollector.Common.Types.OssProvider
   , OssProviderJson
   ) where
 
-import           Control.Lens
 import           Data.Aeson
-import           GHC.Generics                     (Generic)
 import qualified Servant.Docs                     as Docs
-
-import           FileCollector.Common.Base.Aeson (lensDefaultOptions)
 
 class OssProvider provider where
   data OssClientCredential provider

@@ -16,10 +16,6 @@ module FileCollector.Common.Types.HashValue
 import           Control.Lens
 import           Data.Aeson
 import           Data.ByteString                           (ByteString)
-import qualified Data.ByteString.Base64                    as ByteStringBase64 (decode,
-                                                                                encode)
-import qualified Data.Text.Encoding                        as Text (decodeUtf8,
-                                                                    encodeUtf8)
 import           GHC.Generics                              (Generic)
 import qualified Servant.Docs                              as Docs
 

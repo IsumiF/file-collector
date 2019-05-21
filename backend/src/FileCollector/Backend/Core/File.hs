@@ -32,12 +32,13 @@ import           Control.Monad.Reader
 import           Control.Monad.Trans.Except
 import           Control.Monad.Trans.Maybe
 import           Data.ByteString (ByteString)
-import           Data.Maybe (isJust, fromMaybe)
+import           Data.Maybe (fromMaybe, isJust)
 import           Data.Proxy (Proxy (..))
 import           Data.String.Interpolate (i)
 import           Data.Traversable (for)
 import qualified Data.UUID as UUID
 
+import           FileCollector.Backend.Core.File.Authorization
 import qualified FileCollector.Backend.Database.Class.MonadConnection as Db
 import qualified FileCollector.Backend.Database.Class.MonadDirectoryContent as Db
 import qualified FileCollector.Backend.Database.Class.MonadDirectoryUploader as Db
@@ -374,23 +375,17 @@ getFile ::
   , Db.MonadReadUser (ReaderT backend m)
   , Db.MonadReadDirectory (ReaderT backend m)
   , Oss.MonadOssService ossProvider m
+  , Db.MonadDirectoryUploader (ReaderT backend m)
   )
   => User -- ^me
-  -> UserName -- ^owner name
-  -> DirectoryName -- ^directory name
-  -> UserName -- ^uploader name
-  -> FileName -- ^file name
+  -> FullFilePath
   -> Bool -- ^whether to return credential
   -> m (Maybe (File, Maybe (OssClientCredential ossProvider)))
-getFile me ownerName dirName uploaderName fileName' returnCred =
-    Db.withConnection $ runMaybeT $
-      maybeTJustIf' authorized $ do
-        fileId <- MaybeT $ Db.getFileId
-          (convert ownerName)
-          (convert dirName)
-          (convert uploaderName)
-          (convert fileName')
-        dbFile <- MaybeT $ Db.getFileById fileId
+getFile me fullFilePath returnCred =
+    Db.withConnection $ fmap join $ runMaybeT $ runMaybeT $
+      withFileAuthorized me fullFilePath $ \_ _ _ fileId -> do
+        fileId' <- MaybeT $ pure fileId
+        dbFile <- MaybeT $ Db.getFileById fileId'
         file <- MaybeT $ fileDbToCommon dbFile
         maybeCred <-
           if returnCred
@@ -399,11 +394,6 @@ getFile me ownerName dirName uploaderName fileName' returnCred =
             exceptToMaybeT . ExceptT $ Oss.getDownloadCredential ossFileName
           else pure Nothing
         pure (file, maybeCred)
-  where
-    authorized =
-         me ^. user_name == ownerName && me ^. user_role == RoleCollector
-      || me ^. user_name == uploaderName
-      || me ^. user_role == RoleAdmin
 
 {-| 上传文件。返回上传证书，把文件加入PendingUploadFile表
 
@@ -425,32 +415,16 @@ putFile ::
   , MonadUUID m
   )
   => User -- ^current user
-  -> UserName -- ^owner name
-  -> DirectoryName -- ^directory name
-  -> UserName -- ^uploader name
-  -> FileName -- ^file name
+  -> FullFilePath
   -> Maybe FileName -- ^new file name
   -> m (Either PutFileFailure (OssClientCredential ossProvider))
-putFile me ownerName dirName uploaderName fileName' newFileName =
-    Db.withConnection $ runExceptT $ do
-      dirId <- maybeToExceptT PutFileDirNotExist $ MaybeT $
-        Db.getDirectoryId (convert ownerName) (convert dirName)
-      userId <- maybeToExceptT PutFilePermissionDenied $ MaybeT $
-        Db.getIdByUserName (convert $ me ^. user_name)
-      authorized <-
-        (me ^. user_name == uploaderName &&) <$>
-          case me ^. user_role of
-            RoleAdmin     -> pure True
-            RoleCollector -> pure $ me ^. user_name == ownerName
-            RoleUploader  -> Db.dirHasUploader dirId userId
-      if not authorized
-      then throwE PutFilePermissionDenied
-      else do
-        fileId <- Db.getFileId (convert ownerName) (convert dirName) (convert uploaderName) (convert fileName')
+putFile me fullFilePath newFileName =
+    Db.withConnection $ fmap join $ runExceptT $ runExceptT $ maybeToExceptT PutFilePermissionDenied $
+      withFileAuthorized me fullFilePath $ \_ uploaderId dirId fileId -> do
         file <- join <$> traverse Db.getFileById fileId
         let rawPath = fmap Db.fileRawPath file
         maybeToExceptT PutFileSystemTooBusy $ MaybeT $
-          putPendingUploadFile fileName' userId dirId newFileName rawPath
+          putPendingUploadFile (fullFilePath ^. fullFilePath_fileName) uploaderId dirId newFileName rawPath
 
 putPendingUploadFile ::
   ( Db.MonadPendingUploadFile m
@@ -467,7 +441,7 @@ putPendingUploadFile ::
 putPendingUploadFile fileName uploaderId dirId newFileName rawPath = runMaybeT $ do
     let pendingKey = Db.UniquePendingUploadFile (convert fileName) uploaderId dirId
     pendingEntry <- Db.getPendingUploadFile pendingKey
-    rawPath' <- 
+    rawPath' <-
       case pendingEntry of
         Just pendingEntry' -> do
           updateExistingPendingFile fileName uploaderId dirId newFileName
@@ -511,7 +485,7 @@ updateExistingPendingFile (FileName fileName) uploaderId dirId newFileName = do
       now
 
 deleteFile ::
-  ( Db.MonadConnection m
+  forall oss backend m. ( Db.MonadConnection m
   , Db.Backend m ~ backend
   , Oss.MonadOssService oss m
   , Db.MonadReadDirectory (ReaderT backend m)
@@ -522,33 +496,54 @@ deleteFile ::
   )
   => Proxy oss
   -> User -- ^me
-  -> UserName -- ^dir owner name
-  -> DirectoryName -- ^dir name
-  -> UserName -- ^uploader name
-  -> FileName -- ^filename
+  -> FullFilePath
   -> m (Maybe ())
-deleteFile _ me dirOwner dirName uploaderName fileName =
-    Db.withConnection $ runMaybeT $ do
-      dirId <- MaybeT $ Db.getDirectoryId (convert dirOwner) (convert dirName)
-      fileId <- MaybeT $ Db.getFileId (convert dirOwner) (convert dirName) (convert uploaderName) (convert fileName)
-      userId <- MaybeT $ Db.getIdByUserName (convert $ me ^. user_name)
-      authorized <-
-        case me ^. user_role of
-          RoleUploader -> (me ^. user_name == uploaderName &&) <$> Db.dirHasUploader dirId userId
-          RoleCollector -> pure $ me ^. user_name == dirOwner
-          RoleAdmin -> pure True
-      if not authorized
-      then pure ()
-      else Db.deleteFile fileId
+deleteFile _ me fullFilePath =
+    Db.withConnection $ fmap join $ runMaybeT $ runMaybeT $
+      withFileAuthorized me fullFilePath $ \_ _ _ fileId -> do
+        fileId' <- MaybeT $ pure fileId
+        dbFile <- MaybeT $ Db.getFileById fileId'
+        let ossFileName :: Oss.FileName oss = Oss.fromRawPath $ Db.fileRawPath dbFile
+        deleteSuccess <- Oss.deleteFile ossFileName
+        if deleteSuccess then Db.deleteFile fileId' else pure ()
 
 commitPutFile ::
+  forall m backend oss.
   ( Db.MonadConnection m
   , Db.Backend m ~ backend
+  , Db.MonadWriteFile (ReaderT backend m)
+  , Db.MonadReadDirectory (ReaderT backend m)
+  , Db.MonadReadUser (ReaderT backend m)
+  , Db.MonadDirectoryUploader (ReaderT backend m)
+  , Db.MonadPendingUploadFile (ReaderT backend m)
+  , Oss.MonadOssService oss m
   )
-  => User
-  -> UserName
-  -> DirectoryName
-  -> UserName
-  -> FileName
+  => Proxy oss
+  -> User
+  -> FullFilePath
   -> m (Maybe ())
-commitPutFile me ownerName dirName uploaderName fileName = undefined
+commitPutFile _ me fullFilePath =
+    Db.withConnection $ fmap join $ runMaybeT $ runMaybeT $
+      withFileAuthorized me fullFilePath $ \_ uploaderId dirId fileId -> do
+        let pendingEntryKey = Db.UniquePendingUploadFile
+              (convert $ fullFilePath ^. fullFilePath_fileName) uploaderId dirId
+        pendingEntry <- MaybeT $ Db.getPendingUploadFile pendingEntryKey
+        let ossFileName :: Oss.FileName oss =
+              Oss.fromRawPath $ Db.pendingUploadFileRawPath pendingEntry
+        fileMetaInfo <- MaybeT $ Oss.getFileMetaInfo ossFileName
+        let lastModified = fileMetaInfo ^. Oss.fileMetaInfo_lastModified
+            lastModified' = max
+              (Db.pendingUploadFileRequestTime pendingEntry) lastModified
+            mkNewFile = Db.File
+              (Db.pendingUploadFileName pendingEntry)
+              (convert $ HashValue HashTypeMD5 "")
+              (Db.pendingUploadFileUploader pendingEntry)
+              (Db.pendingUploadFileDirectory pendingEntry)
+              lastModified'
+        case fileId of
+          Nothing ->
+            void $ Db.addFile $ mkNewFile (Db.pendingUploadFileRawPath pendingEntry)
+          Just fileId' -> do
+            existingFile <- MaybeT $ Db.getFileById fileId'
+            Db.updateFile fileId' (mkNewFile (Db.fileRawPath existingFile))
+            Db.removePendingUploadFile pendingEntryKey

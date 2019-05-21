@@ -5,9 +5,10 @@ module FileCollector.Backend.Database.Class.MonadWriteFile
   ) where
 
 import           FileCollector.Backend.Database.Class.Internal.Prelude
+import           FileCollector.Backend.Database.Class.MonadReadFile
 import qualified FileCollector.Backend.Database.Impl.WriteFile as Impl
 
-class Monad m => MonadWriteFile m where
+class MonadReadFile m => MonadWriteFile m where
   deleteFile :: FileId -> m ()
   addFile :: File -> m FileId
   updateFile :: FileId -> File -> m ()

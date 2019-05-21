@@ -25,3 +25,10 @@ const char *fc_aos_getDownloadUrl(
     const char *endPoint,
     const char *bucketName,
     const char *objectName);
+
+char *fc_aos_getFileMeta(
+    const char *accessKeyId,
+    const char *accessKeySecret,
+    const char *endPoint,
+    const char *bucketName,
+    const char *objectName);

@@ -13,7 +13,6 @@ module FileCollector.Common.Types.DownloadRequest
 
 import           Control.Lens
 import           Data.Aeson
-import           Data.Text                            (Text)
 import           GHC.Generics                         (Generic)
 import qualified Servant.Docs                         as Docs
 

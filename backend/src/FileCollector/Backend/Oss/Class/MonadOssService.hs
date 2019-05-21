@@ -9,6 +9,8 @@ module FileCollector.Backend.Oss.Class.MonadOssService
   , FileName
   , HasError(..)
   , FromRawPath(..)
+  , Impl.FileMetaInfo(..)
+  , Impl.fileMetaInfo_lastModified
   ) where
 
 import Control.Monad.Reader
@@ -27,10 +29,10 @@ class
   , FromRawPath (FileName provider)
   , Common.OssProvider provider
   ) => MonadOssService provider m where
-  -- TODO 增加返回错误信息的功能
   getUploadCredential :: FileName provider -> m (Either (Error provider) (Common.OssClientCredential provider))
   getDownloadCredential :: FileName provider -> m (Either (Error provider) (Common.OssClientCredential provider))
   deleteFile :: FileName provider -> m Bool
+  getFileMetaInfo :: FileName provider -> m (Maybe Impl.FileMetaInfo)
 
 class FromRawPath fileName where
   fromRawPath :: ByteString -> fileName
@@ -44,6 +46,7 @@ instance (MonadOssService provider m, MonadTrans t, Monad (t m))
   getUploadCredential = lift . getUploadCredential
   getDownloadCredential = lift . getDownloadCredential
   deleteFile = lift . deleteFile
+  getFileMetaInfo = lift . getFileMetaInfo
 
 -- instances for Aliyun.
 
@@ -60,3 +63,4 @@ instance MonadOssService Common.Aliyun App where
   getUploadCredential = Impl.getUploadCredential
   getDownloadCredential = Impl.getDownloadCredential
   deleteFile = Impl.deleteFile
+  getFileMetaInfo = Impl.getFileMetaInfo

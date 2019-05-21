@@ -92,23 +92,29 @@ handlerGetFile :: MonadOssService ossProvider App
                -> ServerT (ApiGetFile ossProvider) AppHandler
 handlerGetFile _ (UserUploader user) ownerName dirName uploaderName fileName returnCred =
     throw404OnNothing $
-      Core.getFile user ownerName dirName uploaderName fileName returnCred
+      Core.getFile user fullFilePath returnCred
+  where
+    fullFilePath = Common.FullFilePath ownerName dirName uploaderName fileName
 
 handlerPutFile :: MonadOssService ossProvider App
                => Proxy ossProvider
                -> ServerT (ApiPutFile ossProvider) AppHandler
 handlerPutFile _ (UserUploader me)
   ownerName dirName uploaderName fileName newFileName = do
-    result <- Core.putFile me ownerName dirName uploaderName fileName newFileName
+    result <- Core.putFile me fullFilePath newFileName
     case result of
       Left err -> throwError err404 { errBody = Aeson.encode err }
       Right result' -> pure result'
+  where
+    fullFilePath = Common.FullFilePath ownerName dirName uploaderName fileName
 
 handlerDeleteFile :: MonadOssService ossProvider App
                   => Proxy ossProvider
                   -> ServerT ApiDeleteFile AppHandler
 handlerDeleteFile p (UserUploader me) ownerName dirName uploaderName fileName = 
-    throw404OnNothing $ Core.deleteFile p me ownerName dirName uploaderName fileName
+    throw404OnNothing $ Core.deleteFile p me fullFilePath
+  where
+    fullFilePath = Common.FullFilePath ownerName dirName uploaderName fileName
 
 throw404OnNothing :: AppHandler (Maybe a) -> AppHandler a
 throw404OnNothing action = do
@@ -120,5 +126,7 @@ throw404OnNothing action = do
 handlerCommitPutFile :: MonadOssService oss App
                      => Proxy oss
                      -> ServerT (ApiCommitPutFile oss) AppHandler
-handlerCommitPutFile _ (UserUploader me) ownerName dirName uploaderName fileName =
-    throw404OnNothing $ Core.commitPutFile me ownerName dirName uploaderName fileName
+handlerCommitPutFile p (UserUploader me) ownerName dirName uploaderName fileName =
+    throw404OnNothing $ Core.commitPutFile p me fullFilePath
+  where
+    fullFilePath = Common.FullFilePath ownerName dirName uploaderName fileName
