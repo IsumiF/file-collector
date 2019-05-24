@@ -28,13 +28,19 @@ steps:
     git submodule init
     git submodule update --recursive
   displayName: Init Submodule
+- task: DownloadSecureFile@1
+  inputs:
+    secureFile: int_test.json
 - script: |
+    mkdir -p backend/config
+    cp $DOWNLOADSECUREFILE_SECUREFILEPATH backend/config/
     export PATH=$HOME/.local/bin:$PATH
     stack --no-terminal --install-ghc test --only-dependencies
   displayName: Build Dependencies
 - script: |
     export PATH=$HOME/.local/bin:$PATH
     export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/usr/local/lib
+    cp 
     # Build the package, its tests, and its docs and run the tests
     stack test --haddock --no-haddock-deps
   displayName: Test Package

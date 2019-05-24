@@ -21,6 +21,7 @@ module FileCollector.Common.Types.Directory
 
 import           Control.Lens
 import           Data.Aeson
+import           Data.String (IsString)
 import           Data.Text (Text)
 import           Data.Time (UTCTime (..), fromGregorian)
 import           Data.Word (Word32)
@@ -40,7 +41,7 @@ data Directory = Directory
   } deriving (Generic, Show, Eq)
 
 newtype DirectoryName = DirectoryName Text
-  deriving (Generic, Show, Eq, FromJSON, ToJSON, FromHttpApiData, ToHttpApiData)
+  deriving (Generic, Show, Eq, FromJSON, ToJSON, FromHttpApiData, ToHttpApiData, IsString)
 
 data UploadRule =
   -- | maximum file size, in bytes

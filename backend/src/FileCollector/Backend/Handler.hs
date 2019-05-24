@@ -1,3 +1,5 @@
+{-# LANGUAGE FlexibleContexts #-}
+
 module FileCollector.Backend.Handler
   (
   -- *Primary Handler
@@ -7,12 +9,19 @@ module FileCollector.Backend.Handler
   , makeAuthCheck
   ) where
 
+import Data.Proxy (Proxy (..))
 import Servant.Server
 
-import FileCollector.Backend.Handler.AppHandler (AppHandler, toHandler)
-import FileCollector.Backend.Handler.Auth (makeAuthCheck)
-import FileCollector.Common.Api (Api)
+import           FileCollector.Backend.App (App)
+import           FileCollector.Backend.Handler.AppHandler
+    (AppHandler, toHandler)
+import           FileCollector.Backend.Handler.Auth (makeAuthCheck)
+import qualified FileCollector.Backend.Handler.Impl.File as File
+import           FileCollector.Backend.Oss.Class.MonadOssService
+import           FileCollector.Common.Api (Api)
 
 -- |Handler to 'Api'
-handler :: ServerT (Api ossProvider) AppHandler
-handler = undefined
+handler :: MonadOssService ossProvider App
+        => Proxy ossProvider
+        -> ServerT (Api ossProvider) AppHandler
+handler = File.handler

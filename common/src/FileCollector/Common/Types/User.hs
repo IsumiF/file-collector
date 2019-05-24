@@ -14,6 +14,7 @@ module FileCollector.Common.Types.User
 
 import           Control.Lens
 import           Data.Aeson
+import           Data.String (IsString)
 import           Data.Text (Text)
 import           GHC.Generics (Generic)
 import           Servant.API
@@ -27,7 +28,7 @@ data User = User
   } deriving (Show, Generic)
 
 newtype UserName = UserName Text
-  deriving (Show, Eq, Ord, Generic, FromHttpApiData, ToHttpApiData)
+  deriving (Show, Eq, Ord, Generic, FromHttpApiData, ToHttpApiData, IsString)
 
 data Role = RoleUploader | RoleCollector | RoleAdmin
   deriving (Show, Eq, Generic)

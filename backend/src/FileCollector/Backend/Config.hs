@@ -6,15 +6,19 @@
 module FileCollector.Backend.Config
   ( Config(..)
   , readConfigFromFile
+  , WarpConfig(..)
+  , OtherConfig(..)
   , LogLevelWrapped(..)
   , ConfigOss(..)
   , ConfigOssAliyun(..)
   -- *Lens
-  , config_port
-  , config_ip
-  , config_dbConnStr
-  , config_logLevel
-  , config_oss
+  , config_warp
+  , warpConfig_port
+  , warpConfig_ip
+  , config_other
+  , otherConfig_dbConnStr
+  , otherConfig_logLevel
+  , otherConfig_oss
   , configOss_aliyun
   , configOssAliyun_accessKeyId
   , configOssAliyun_accessKeySecret
@@ -33,15 +37,21 @@ import FileCollector.Common.Base.Aeson (lensDefaultOptions)
 
 -- |Server initial configuration
 data Config = Config
+  { _config_warp :: WarpConfig
+  , _config_other :: OtherConfig
+  } deriving (Generic, Show)
+
+data WarpConfig = WarpConfig
   { -- | Port
-    _config_port      :: Int
+    _warpConfig_port :: Int
     -- | Server IPv4 address
-  , _config_ip        :: Text
-    -- | Database connection string (Current database is Sqlite3)
-  , _config_dbConnStr :: Text
-    -- | Log level
-  , _config_logLevel  :: LogLevelWrapped
-  , _config_oss       :: ConfigOss
+  , _warpConfig_ip   :: Text
+  } deriving (Generic, Show)
+
+data OtherConfig = OtherConfig
+  { _otherConfig_dbConnStr :: Text
+  , _otherConfig_logLevel :: LogLevelWrapped
+  , _otherConfig_oss :: ConfigOss
   } deriving (Generic, Show)
 
 -- Simple wrapper of 'LogLevel' supporting 'FromJSON'
@@ -49,16 +59,6 @@ newtype LogLevelWrapped = LogLevelWrapped LogLevel
 
 instance Show LogLevelWrapped where
   show (LogLevelWrapped x) = show x
-
-instance FromJSON LogLevelWrapped where
-  parseJSON = withText "expected string" $ \txt ->
-    pure . LogLevelWrapped $
-      case txt of
-        "Debug" -> LevelDebug
-        "Info"  -> LevelInfo
-        "Warn"  -> LevelWarn
-        "Error" -> LevelError
-        _       -> LevelOther txt
 
 newtype ConfigOss = ConfigOss
   { _configOss_aliyun :: ConfigOssAliyun
@@ -71,16 +71,33 @@ data ConfigOssAliyun = ConfigOssAliyun
   , _configOssAliyun_bucketName      :: Text
   } deriving (Generic, Show)
 
+makeLenses ''Config
 makeLenses ''ConfigOss
 makeLenses ''ConfigOssAliyun
+makeLenses ''WarpConfig
+makeLenses ''OtherConfig
+
+instance FromJSON WarpConfig where
+  parseJSON = genericParseJSON lensDefaultOptions
+
+instance FromJSON OtherConfig where
+  parseJSON = genericParseJSON lensDefaultOptions
+
+instance FromJSON LogLevelWrapped where
+  parseJSON = withText "expected string" $ \txt ->
+    pure . LogLevelWrapped $
+      case txt of
+        "Debug" -> LevelDebug
+        "Info"  -> LevelInfo
+        "Warn"  -> LevelWarn
+        "Error" -> LevelError
+        _       -> LevelOther txt
 
 instance FromJSON ConfigOss where
   parseJSON = genericParseJSON lensDefaultOptions
 
 instance FromJSON ConfigOssAliyun where
   parseJSON = genericParseJSON lensDefaultOptions
-
-makeLenses ''Config
 
 instance FromJSON Config where
   parseJSON = genericParseJSON lensDefaultOptions

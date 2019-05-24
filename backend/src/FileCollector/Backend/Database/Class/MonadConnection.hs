@@ -42,19 +42,19 @@ instance MonadConnection App where
   transactionSave = Persist.transactionSave
 
 instance (MonadConnection m) => MonadConnection (ExceptT e m) where
-    type Backend (ExceptT e m) = Backend m
+  type Backend (ExceptT e m) = Backend m
 
-    withConnection :: ReaderT (Backend m) (ExceptT e m) a -> ExceptT e m a
-    withConnection action = ExceptT $ withConnection $ do
-      conn <- ask
-      lift $ runExceptT (runReaderT action conn)
+  withConnection :: ReaderT (Backend m) (ExceptT e m) a -> ExceptT e m a
+  withConnection action = ExceptT $ withConnection $ do
+    conn <- ask
+    lift $ runExceptT (runReaderT action conn)
 
-    transactionUndo :: ReaderT (Backend m) (ExceptT e m) ()
-    transactionUndo = do
-      conn <- ask
-      lift . lift $ runReaderT transactionUndo conn
+  transactionUndo :: ReaderT (Backend m) (ExceptT e m) ()
+  transactionUndo = do
+    conn <- ask
+    lift . lift $ runReaderT transactionUndo conn
 
-    transactionSave :: ReaderT (Backend m) (ExceptT e m) ()
-    transactionSave = do
-      conn <- ask
-      lift . lift $ runReaderT transactionSave conn
+  transactionSave :: ReaderT (Backend m) (ExceptT e m) ()
+  transactionSave = do
+    conn <- ask
+    lift . lift $ runReaderT transactionSave conn

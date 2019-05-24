@@ -7,13 +7,14 @@ module FileCollector.Common.Types.Password
   ) where
 
 import           Data.Aeson
+import           Data.String (IsString)
 import           Data.Text (Text)
 import           GHC.Generics (Generic)
 import           Servant.API
 import qualified Servant.Docs as Docs
 
 newtype Password = Password Text
-  deriving (Show, Eq, Generic, ToJSON, FromJSON, FromHttpApiData, ToHttpApiData)
+  deriving (Show, Eq, Generic, ToJSON, FromJSON, FromHttpApiData, ToHttpApiData, IsString)
 
 instance Docs.ToSample Password where
   toSamples _ = Docs.singleSample $ Password "awiefoaewjo123"

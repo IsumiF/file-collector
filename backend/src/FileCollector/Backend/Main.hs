@@ -1,11 +1,12 @@
 {-# LANGUAGE DataKinds           #-}
 {-# LANGUAGE OverloadedStrings   #-}
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TemplateHaskell     #-}
 {-# LANGUAGE TypeOperators       #-}
-{-# LANGUAGE TemplateHaskell #-}
 
 module FileCollector.Backend.Main
   ( main
+  , mainAsWai
   ) where
 
 import           Control.Lens hiding (Context)
@@ -16,15 +17,17 @@ import           Data.Pool (Pool)
 import           Data.Proxy (Proxy (Proxy))
 import           Database.Persist.Sql (SqlBackend)
 import           Database.Persist.Sqlite (createSqlitePool)
-import qualified Network.Wai.Handler.Warp as Warp (run)
+import qualified Network.Wai.Handler.Warp as Warp
 import qualified Options.Applicative as Opt
 import           Servant.Server
 import           System.Exit (exitFailure)
 import           System.IO (hPutStrLn, stderr)
 
-import           FileCollector.Backend.App (AppEnv, makeAppEnv, runApp)
+import           FileCollector.Backend.App (App, AppEnv, makeAppEnv, runApp)
 import           FileCollector.Backend.Config
 import qualified FileCollector.Backend.Database as Database (initialize)
+import qualified FileCollector.Backend.Database.Class.MonadConnection as Db
+    (withConnection)
 import           FileCollector.Backend.Handler
     (handler, makeAuthCheck, toHandler)
 import           FileCollector.Backend.Logger (withLogStdout)
@@ -44,33 +47,28 @@ main = do
         hPutStrLn stderr "Can't read configuration file"
         exitFailure'
       Just config -> do
-        -- 阿里云演示
-        -- initStatus <- Aliyun.initialize
-        -- if not initStatus
-        -- then putStrLn "阿里云初始化失败"
-        -- else do
-        --   let aliyunConfig = config ^. (config_oss . configOss_aliyun)
-        --   let accessKey = Aliyun.AccessKey
-        --         (aliyunConfig ^. configOssAliyun_accessKeyId)
-        --         (aliyunConfig ^. configOssAliyun_accessKeySecret)
-        --   let objectId = Aliyun.ObjectId
-        --         (aliyunConfig ^. configOssAliyun_endPoint)
-        --         (aliyunConfig ^. configOssAliyun_bucketName)
-        --         "hello.txt"
-        --   uploadUrl <- Aliyun.getUploadUrl accessKey objectId
-        --   T.putStrLn uploadUrl
+          warpApp <- mainAsWai (config ^. config_other) (pure ())
+          let warpSettings =
+                Warp.setPort (config ^. (config_warp . warpConfig_port))
+                Warp.defaultSettings
+          Warp.runSettings warpSettings warpApp
 
-        sqlPool :: Pool SqlBackend <- runStdoutLoggingT $
-          createSqlitePool (config ^. config_dbConnStr) 10
-        withLogStdout (coerce (config ^. config_logLevel)) $ \logger -> do
-          let appEnv = makeAppEnv sqlPool logger (config ^. config_oss)
-          flip runApp appEnv $ do
-            Database.initialize
-            aliyunStatus <- liftIO $ Aliyun.initialize
-            if not aliyunStatus
-            then $(logError) "Aliyun initialization failed" >> exitFailure'
-            else pure ()
-          Warp.run (config ^. config_port) (makeApplication appEnv)
+-- | Initializes the server and returns a wai 'Application'
+mainAsWai :: OtherConfig
+          -> App () -- ^code to run after initialized the app
+          -> IO Application
+mainAsWai config postAppInit =
+    withLogStdout (coerce (config ^. otherConfig_logLevel)) $ \logger -> do
+      sqlPool :: Pool SqlBackend <- flip runLoggingT logger $
+        createSqlitePool (config ^. otherConfig_dbConnStr) 10
+      let appEnv = makeAppEnv sqlPool logger (config ^. otherConfig_oss)
+      flip runApp appEnv $ do
+        Db.withConnection Database.initialize
+        aliyunStatus <- liftIO Aliyun.initialize
+        if not aliyunStatus
+        then $(logError) "Aliyun initialization failed" >> exitFailure'
+        else postAppInit
+        pure $ servantApp appEnv
 
 exitFailure' :: MonadIO m => m a
 exitFailure' = liftIO exitFailure
@@ -91,14 +89,15 @@ parser = Option
 parserInfo :: Opt.ParserInfo Option
 parserInfo = Opt.info (parser Opt.<**> Opt.helper) Opt.fullDesc
 
-makeApplication :: AppEnv
-                -> Application
-makeApplication env =
+servantApp :: AppEnv
+           -> Application
+servantApp env =
     serveWithContext
       apiProxy
       context
-      (hoistServerWithContext apiProxy contextProxy hoist handler)
+      (hoistServerWithContext apiProxy contextProxy hoist (handler ossProxy))
   where
+    ossProxy = Proxy :: Proxy Aliyun
     apiProxy = Proxy :: Proxy (Api Aliyun)
     context = makeContext env
     contextProxy = Proxy :: Proxy HandlerContext

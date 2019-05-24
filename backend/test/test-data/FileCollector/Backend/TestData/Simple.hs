@@ -2,7 +2,7 @@
 {-# LANGUAGE OverloadedStrings   #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 
-module FileCollector.Backend.Database.Spec.TestData
+module FileCollector.Backend.TestData.Simple
   ( populateTestData
   , samplePasswords
   ) where
@@ -68,7 +68,6 @@ populateTestData = liftPersist $ do
     insert_ $ CanUploadTo stu3 dir1
     insert_ $ CanUploadTo stu3 dir3
 
-
 -- |Sample passwords, in pairs of plaintext and salted hash
 samplePasswords :: [(Text, ByteString)]
 samplePasswords = fmap (second (\x -> salt <> bsFromHex x))
@@ -97,3 +96,4 @@ bsFromHex hexStr =
     ByteString.pack $ fmap (fst . head . readHex . Text.unpack) hexStrs
   where
     hexStrs = Text.chunksOf 2 hexStr
+

@@ -15,16 +15,16 @@ module FileCollector.Common.Types.File
 
 import           Control.Lens
 import           Data.Aeson
-import           Data.Text                            (Text)
-import           Data.Time                            (UTCTime (..),
-                                                       fromGregorian)
-import           GHC.Generics                         (Generic)
+import           Data.String (IsString)
+import           Data.Text (Text)
+import           Data.Time (UTCTime (..), fromGregorian)
+import           GHC.Generics (Generic)
 import           Servant.API
-import qualified Servant.Docs                         as Docs
+import qualified Servant.Docs as Docs
 
-import           FileCollector.Common.Types.HashValue
-import           FileCollector.Common.Types.User      (UserName (..))
-import           FileCollector.Common.Base.Aeson     (lensDefaultOptions)
+import FileCollector.Common.Base.Aeson (lensDefaultOptions)
+import FileCollector.Common.Types.HashValue
+import FileCollector.Common.Types.User (UserName (..))
 
 data File = File
   { _file_name         :: FileName
@@ -34,7 +34,7 @@ data File = File
   } deriving Generic
 
 newtype FileName = FileName Text
-  deriving (Generic, Show, Eq, FromJSON, ToJSON, FromHttpApiData, ToHttpApiData)
+  deriving (Generic, Show, Eq, FromJSON, ToJSON, FromHttpApiData, ToHttpApiData, IsString)
 
 makeLenses ''File
 
