@@ -6,6 +6,7 @@ module FileCollector.Backend.Database.Impl.PendingUploadFile
   , isPendingUploadFileExist
   , getPendingUploadFile
   , removePendingUploadFile
+  , removeAllPendingUploadFilesOfDirectory 
   ) where
 
 import Control.Monad.Trans.Maybe
@@ -50,3 +51,11 @@ removePendingUploadFile :: MonadSqlDb m
                         => Unique PendingUploadFile
                         -> m ()
 removePendingUploadFile = liftPersist . deleteBy
+
+removeAllPendingUploadFilesOfDirectory ::
+  ( MonadSqlDb m
+  )
+  => DirectoryId
+  -> m ()
+removeAllPendingUploadFilesOfDirectory dirId = liftPersist $
+  deleteWhere [CanUploadToDirectory ==. dirId]

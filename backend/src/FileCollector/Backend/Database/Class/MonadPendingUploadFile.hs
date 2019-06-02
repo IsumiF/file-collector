@@ -23,6 +23,7 @@ class Monad m => MonadPendingUploadFile m where
   getPendingUploadFile :: Unique PendingUploadFile -> m (Maybe PendingUploadFile)
   -- |删除一个等待上传项。如果这项不存在，就什么都不做
   removePendingUploadFile :: Unique PendingUploadFile -> m ()
+  removeAllPendingUploadFilesOfDirectory :: DirectoryId -> m ()
 
 instance MonadIO m => MonadPendingUploadFile (ReaderT SqlBackend m) where
   addPendingUploadFile = Impl.addPendingUploadFile
@@ -30,6 +31,7 @@ instance MonadIO m => MonadPendingUploadFile (ReaderT SqlBackend m) where
   isPendingUploadFileExist = Impl.isPendingUploadFileExist
   getPendingUploadFile = Impl.getPendingUploadFile
   removePendingUploadFile = Impl.removePendingUploadFile
+  removeAllPendingUploadFilesOfDirectory = Impl.removeAllPendingUploadFilesOfDirectory
 
 instance (MonadPendingUploadFile m) => MonadPendingUploadFile (MaybeT m) where
   addPendingUploadFile = lift . addPendingUploadFile
@@ -37,6 +39,7 @@ instance (MonadPendingUploadFile m) => MonadPendingUploadFile (MaybeT m) where
   isPendingUploadFileExist = lift . isPendingUploadFileExist
   getPendingUploadFile = lift . getPendingUploadFile
   removePendingUploadFile = lift . removePendingUploadFile
+  removeAllPendingUploadFilesOfDirectory = lift . removeAllPendingUploadFilesOfDirectory
 
 instance (MonadPendingUploadFile m) => MonadPendingUploadFile (ExceptT e m) where
   addPendingUploadFile = lift . addPendingUploadFile
@@ -44,3 +47,4 @@ instance (MonadPendingUploadFile m) => MonadPendingUploadFile (ExceptT e m) wher
   isPendingUploadFileExist = lift . isPendingUploadFileExist
   getPendingUploadFile = lift . getPendingUploadFile
   removePendingUploadFile = lift . removePendingUploadFile
+  removeAllPendingUploadFilesOfDirectory = lift . removeAllPendingUploadFilesOfDirectory

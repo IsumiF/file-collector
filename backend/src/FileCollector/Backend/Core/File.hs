@@ -231,6 +231,8 @@ deleteDirectory ::
   , Db.MonadReadUser (ReaderT backend m)
   , Db.MonadDirectoryContent (ReaderT backend m)
   , Db.MonadWriteFile (ReaderT backend m)
+  , Db.MonadDirectoryUploader (ReaderT backend m)
+  , Db.MonadPendingUploadFile (ReaderT backend m)
   , Oss.MonadOssService provider m
   )
   => Proxy provider
@@ -246,6 +248,8 @@ deleteDirectory _ me ownerName dirName =
       then throwE DdeNoSuchDirectory
       else pure ()
       dirId <- maybeToExceptT DdeNoSuchDirectory $ MaybeT $ Db.getDirectoryId (convert ownerName) (convert dirName)
+      Db.deleteAllUploadersOfDir dirId
+      Db.removeAllPendingUploadFilesOfDirectory dirId
       files <- lift $ Db.getDirectoryContent dirId
 
       deleteStatList <- for files $ \(fileId, file) -> do

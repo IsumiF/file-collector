@@ -5,14 +5,15 @@ module FileCollector.Backend.Test.DirectorySpec
   ( spec
   ) where
 
-import           Control.Lens
-import           Data.Time
-import           Network.HTTP.Types.Method
-import           Test.Hspec
-import           Test.Hspec.Wai
+import Control.Lens
+import Data.Time
+import Network.HTTP.Types.Header (Header)
+import Network.HTTP.Types.Method
+import Test.Hspec
+import Test.Hspec.Wai
 
 import FileCollector.Backend.Test.Util
-    (authHeader, defaultApp, matchJSON, jsonRequest, emptyBody)
+    (authHeader, defaultApp, emptyBody, jsonRequest, matchJSON)
 import FileCollector.Common.Types
 
 spec :: Spec
@@ -64,6 +65,21 @@ spec = with defaultApp $ do
         jsonRequest methodGet "/api/filesystem/dir/助教-02/课程1-作业1"
           [authHeader "助教-02" "中文密码"] emptyBody
           `shouldRespondWith` matchJSON newDir
+    describe "ApiDeleteDir" $ do
+      it "deletes the dir if a collector owns it" $ do
+        jsonRequest methodGet "/api/filesystem/dir/TA-01/课程1-作业2"
+          [authHeader "zelinf" "abcdef"] emptyBody
+          `shouldRespondWith` 200
+        jsonRequest methodDelete "/api/filesystem/dir/TA-01/课程1-作业2"
+          [authHeaderTA1] emptyBody
+          `shouldRespondWith` 200
+        jsonRequest methodGet "/api/filesystem/dir/TA-01/课程1-作业2"
+          [authHeader "zelinf" "abcdef"] emptyBody
+          `shouldRespondWith` 404
+      it "fails to delete the directory if the collector doesn't own it" $
+        jsonRequest methodDelete "/api/filesystem/dir/TA-01/课程1-作业1"
+          [authHeaderTA2] emptyBody
+          `shouldRespondWith` 404
 
 dirs :: [Directory]
 dirs = [ dir1, dir2, dir3 ]
@@ -86,3 +102,9 @@ dirs = [ dir1, dir2, dir3 ]
       [ RuleMaxFiles 2
       , RuleMaxFileSize (30 * 1024 * 1024)
       ]
+
+authHeaderTA1 :: Header
+authHeaderTA1 = authHeader "TA-01" "abcdef"
+
+authHeaderTA2 :: Header
+authHeaderTA2 = authHeader "助教-02" "中文密码"
