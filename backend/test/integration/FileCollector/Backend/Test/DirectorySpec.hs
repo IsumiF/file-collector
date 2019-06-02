@@ -5,51 +5,66 @@ module FileCollector.Backend.Test.DirectorySpec
   ( spec
   ) where
 
-import           Control.Exception (catch, throw)
-import           Control.Lens
-import qualified Data.Aeson as Aeson
-import qualified Data.Text as T
 import qualified Data.Text.Encoding as T
-import           Network.HTTP.Types.Header
+import           Data.Time
 import           Network.HTTP.Types.Method
-import           Network.Wai (Application)
-import           System.Directory (removeFile)
-import           System.FilePath ((</>))
-import           System.IO.Error (isDoesNotExistError)
 import           Test.Hspec
 import           Test.Hspec.Wai
-import           Test.Hspec.Wai.JSON
 
-import qualified Data.ByteString.Base64 as Base64
-import           FileCollector.Backend.Config
-import qualified FileCollector.Backend.Database.Class.MonadConnection as Db
-import           FileCollector.Backend.Main (mainAsWai)
-import           FileCollector.Backend.TestData.Simple (populateTestData)
-import           FileCollector.Common.Types
-import           Paths_file_collector_backend (getDataDir)
-
-app :: IO Application
-app = do
-    dataDir <- getDataDir
-    config :: Maybe OtherConfig <-
-      Aeson.decodeFileStrict' (dataDir </> "config" </> "int_test.json")
-    case config of
-      Nothing -> error "Failed to read inttest config"
-      Just config' -> do
-        let connStr = dataDir </> "devres" </> "int_test.db"
-        catch (removeFile connStr) $ \e ->
-          if isDoesNotExistError e then pure () else throw e
-        mainAsWai (set otherConfig_dbConnStr (T.pack connStr) config') $
-          Db.withConnection populateTestData
+import FileCollector.Backend.Test.Util (authHeader, defaultApp, matchJSON)
+import FileCollector.Common.Types
 
 spec :: Spec
-spec = with app $
-    describe "ApiGetDirList" $
-      it "gets dirs that an uploader can upload to" $ do
+spec = with defaultApp $ do
+    describe "ApiGetDirList" $ do
+      it "gets dirs that an uploader can upload to" $
         request methodGet "/api/filesystem/dir" [authHeader "zelinf" "abcdef"] ""
-          `shouldRespondWith` 200
+          `shouldRespondWith` matchJSON (take 2 dirs)
+      it "get own dirs of collector" $
+        request methodGet "/api/filesystem/dir" [authHeader "助教-02" "中文密码"] ""
+          `shouldRespondWith` matchJSON (drop 2 dirs)
+      it "get all dirs, if the user is admin" $
+        request methodGet "/api/filesystem/dir" [authHeader "Isumi Fly" "faio31221"] ""
+          `shouldRespondWith` matchJSON dirs
+      it "respond with 401 if the user credential is incorrect" $
+        request methodGet "/api/filesystem/dir" [authHeader "zelinf" "aaaaa"] ""
+        `shouldRespondWith` 401
+    describe "ApiGetDir" $ do
+      it "returns the dir if uploader has permission" $
+        request methodGet (T.encodeUtf8 "/api/filesystem/dir/TA-01/课程1-作业1")
+          [authHeader "zelinf" "abcdef"] ""
+          `shouldRespondWith` matchJSON (head dirs)
+      it "returns 404 if uploader has no permission" $
+        request methodGet (T.encodeUtf8 "/api/filesystem/dir/TA-01/课程2-大作业")
+          [authHeader "zelinf" "abcdef"] ""
+          `shouldRespondWith` 404
+      it "returns the dir if the collector owns it" $
+        request methodGet (T.encodeUtf8 "/api/filesystem/dir/TA-01/课程1-作业1")
+          [authHeader "TA-01" "abcdef"] ""
+          `shouldRespondWith` matchJSON (head dirs)
+      it "returns 404 if the collector doesn't own the dir" $
+        request methodGet (T.encodeUtf8 "/api/filesystem/dir/TA-02/课程2-大作业")
+          [authHeader "TA-01" "abcdef"] ""
+          `shouldRespondWith` 404
 
-authHeader :: UserName -> Password -> Header
-authHeader (UserName username) (Password password) = ("Authorization", value)
+dirs :: [Directory]
+dirs = [ dir1, dir2, dir3 ]
   where
-    value = "Basic " <> Base64.encode (T.encodeUtf8 $ username <> ":" <> password)
+    dir1 = Directory "课程1-作业1" "TA-01"
+      (Just $ UTCTime (fromGregorian 2019 5 8) 0)
+      lesson1Rules
+    dir2 = Directory "课程1-作业2" "TA-01"
+      (Just $ UTCTime (fromGregorian 2019 6 8) 0)
+      lesson1Rules
+    dir3 = Directory "课程2-大作业" "助教-02"
+      Nothing
+      lesson2Rules
+    lesson1Rules =
+      [ RuleMaxFiles 1
+      , RuleMaxFileSize (64 * 1024 * 1024)
+      , RuleFileNameFormat "[[:digit:]]{8}-.+\\.[[:alnum:]\\.]+"
+      ]
+    lesson2Rules =
+      [ RuleMaxFiles 2
+      , RuleMaxFileSize (30 * 1024 * 1024)
+      ]

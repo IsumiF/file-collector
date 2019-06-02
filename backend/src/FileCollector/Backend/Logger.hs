@@ -1,27 +1,22 @@
 module FileCollector.Backend.Logger
   ( Logger
-  , withLogStdout
+  , newLoggerStdout
   ) where
 
-import Control.Monad.IO.Unlift (MonadUnliftIO, withRunInIO)
+import Control.Monad.IO.Class
 import Control.Monad.Logger hiding (filterLogger)
 import System.Log.FastLogger
 
 -- | Logger type as used by 'MonadLogger'
 type Logger = Loc -> LogSource -> LogLevel -> LogStr -> IO ()
 
-{-| Get a 'Logger' that logs to standard output.
--}
-withLogStdout :: MonadUnliftIO m
-              => LogLevel -- ^minimum log level
-              -> (Logger -> m a) -- ^monadic computation that uses the logger
-              -> m a
-withLogStdout minLogLevel action =
-    withRunInIO $ \runInIO ->
-      withFastLogger (LogStdout 4096) $ \fastLogger ->
-        runInIO $ action' (toLogger fastLogger)
-  where
-    action' logger = action (filterLogger minLogLevel logger)
+newLoggerStdout :: MonadIO m
+                => LogLevel
+                -> m (Logger, IO ())
+newLoggerStdout minLogLevel = do
+    (fastLogger, cleanup) <- liftIO $ newFastLogger (LogStdout 4096)
+    let logger' = filterLogger minLogLevel (toLogger fastLogger)
+    pure (logger', cleanup)
 
 toLogger :: FastLogger -> Logger
 toLogger fastLogger loc source level msg =

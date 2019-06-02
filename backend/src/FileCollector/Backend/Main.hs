@@ -30,7 +30,7 @@ import qualified FileCollector.Backend.Database.Class.MonadConnection as Db
     (withConnection)
 import           FileCollector.Backend.Handler
     (handler, makeAuthCheck, toHandler)
-import           FileCollector.Backend.Logger (withLogStdout)
+import           FileCollector.Backend.Logger (newLoggerStdout)
 import qualified FileCollector.Backend.Oss.Impl.Aliyun as Aliyun
 import           FileCollector.Common.Api (Api)
 import           FileCollector.Common.Api.Auth
@@ -57,18 +57,18 @@ main = do
 mainAsWai :: OtherConfig
           -> App () -- ^code to run after initialized the app
           -> IO Application
-mainAsWai config postAppInit =
-    withLogStdout (coerce (config ^. otherConfig_logLevel)) $ \logger -> do
-      sqlPool :: Pool SqlBackend <- flip runLoggingT logger $
-        createSqlitePool (config ^. otherConfig_dbConnStr) 10
-      let appEnv = makeAppEnv sqlPool logger (config ^. otherConfig_oss)
-      flip runApp appEnv $ do
-        Db.withConnection Database.initialize
-        aliyunStatus <- liftIO Aliyun.initialize
-        if not aliyunStatus
-        then $(logError) "Aliyun initialization failed" >> exitFailure'
-        else postAppInit
-        pure $ servantApp appEnv
+mainAsWai config postAppInit = do
+    (logger, _) <- newLoggerStdout (coerce (config ^. otherConfig_logLevel))
+    sqlPool :: Pool SqlBackend <- flip runLoggingT logger $
+      createSqlitePool (config ^. otherConfig_dbConnStr) 10
+    let appEnv = makeAppEnv sqlPool logger (config ^. otherConfig_oss)
+    flip runApp appEnv $ do
+      Db.withConnection Database.initialize
+      aliyunStatus <- liftIO Aliyun.initialize
+      if not aliyunStatus
+      then $(logError) "Aliyun initialization failed" >> exitFailure'
+      else postAppInit
+      pure $ servantApp appEnv
 
 exitFailure' :: MonadIO m => m a
 exitFailure' = liftIO exitFailure

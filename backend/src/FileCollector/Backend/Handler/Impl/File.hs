@@ -1,11 +1,11 @@
-{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE FlexibleContexts  #-}
 
 module FileCollector.Backend.Handler.Impl.File
   ( handler
   ) where
 
-import Servant
 import qualified Data.Aeson as Aeson
+import           Servant
 
 import qualified FileCollector.Backend.Core.File as Core
 import           FileCollector.Backend.Handler.AppHandler
@@ -66,7 +66,7 @@ handlerDeleteDir ossProvider (UserCollector me) ownerName dirName = do
       Right _ -> pure Common.DdrFullyDeleted
       Left err ->
         case err of
-          Core.DdeNoSuchDirectory -> throwError err404
+          Core.DdeNoSuchDirectory  -> throwError err404
           Core.DdePartiallyDeleted -> pure Common.DdrPartiallyDeleted
 
 handlerDirUploaders :: ServerT ApiDirUploaders AppHandler
@@ -103,7 +103,7 @@ handlerPutFile _ (UserUploader me)
   ownerName dirName uploaderName fileName newFileName = do
     result <- Core.putFile me fullFilePath newFileName
     case result of
-      Left err -> throwError err404 { errBody = Aeson.encode err }
+      Left err      -> throwError err404 { errBody = Aeson.encode err }
       Right result' -> pure result'
   where
     fullFilePath = Common.FullFilePath ownerName dirName uploaderName fileName
@@ -111,7 +111,7 @@ handlerPutFile _ (UserUploader me)
 handlerDeleteFile :: MonadOssService ossProvider App
                   => Proxy ossProvider
                   -> ServerT ApiDeleteFile AppHandler
-handlerDeleteFile p (UserUploader me) ownerName dirName uploaderName fileName = 
+handlerDeleteFile p (UserUploader me) ownerName dirName uploaderName fileName =
     throw404OnNothing $ Core.deleteFile p me fullFilePath
   where
     fullFilePath = Common.FullFilePath ownerName dirName uploaderName fileName
@@ -120,7 +120,7 @@ throw404OnNothing :: AppHandler (Maybe a) -> AppHandler a
 throw404OnNothing action = do
     maybeResult <- action
     case maybeResult of
-      Nothing -> throwError err404
+      Nothing     -> throwError err404
       Just result -> pure result
 
 handlerCommitPutFile :: MonadOssService oss App

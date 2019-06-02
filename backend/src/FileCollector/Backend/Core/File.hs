@@ -35,6 +35,7 @@ import           Data.ByteString (ByteString)
 import           Data.Maybe (fromMaybe, isJust)
 import           Data.Proxy (Proxy (..))
 import           Data.String.Interpolate (i)
+import           Data.Text (Text)
 import           Data.Traversable (for)
 import qualified Data.UUID as UUID
 
@@ -119,6 +120,9 @@ getDirectory ::
   -> m (Maybe Directory)
 getDirectory user name dir = Db.withConnection (getDirectory' user name dir)
 
+toText :: Convertible a Text => a -> Text
+toText = convert
+
 getDirectory' ::
   ( Db.MonadReadDirectory m
   , Db.MonadReadUser m
@@ -128,7 +132,8 @@ getDirectory' ::
   -> UserName
   -> DirectoryName
   -> m (Maybe Directory)
-getDirectory' user ownerName dirName =
+getDirectory' user ownerName dirName = do
+    $(logInfo) [i|User #{toText (user ^. user_name)} is accessing directory #{toText ownerName}/#{toText dirName}|]
     case user ^. user_role of
       RoleAdmin -> getDir
       RoleCollector ->
