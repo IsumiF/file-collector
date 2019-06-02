@@ -5,13 +5,14 @@ module FileCollector.Backend.Test.DirectorySpec
   ( spec
   ) where
 
-import qualified Data.Text.Encoding as T
+import           Control.Lens
 import           Data.Time
 import           Network.HTTP.Types.Method
 import           Test.Hspec
 import           Test.Hspec.Wai
 
-import FileCollector.Backend.Test.Util (authHeader, defaultApp, matchJSON)
+import FileCollector.Backend.Test.Util
+    (authHeader, defaultApp, matchJSON, jsonRequest, emptyBody)
 import FileCollector.Common.Types
 
 spec :: Spec
@@ -31,21 +32,38 @@ spec = with defaultApp $ do
         `shouldRespondWith` 401
     describe "ApiGetDir" $ do
       it "returns the dir if uploader has permission" $
-        request methodGet (T.encodeUtf8 "/api/filesystem/dir/TA-01/课程1-作业1")
-          [authHeader "zelinf" "abcdef"] ""
+        jsonRequest methodGet "/api/filesystem/dir/TA-01/课程1-作业1"
+          [authHeader "zelinf" "abcdef"] emptyBody
           `shouldRespondWith` matchJSON (head dirs)
       it "returns 404 if uploader has no permission" $
-        request methodGet (T.encodeUtf8 "/api/filesystem/dir/TA-01/课程2-大作业")
-          [authHeader "zelinf" "abcdef"] ""
+        jsonRequest methodGet "/api/filesystem/dir/TA-01/课程2-大作业"
+          [authHeader "zelinf" "abcdef"] emptyBody
           `shouldRespondWith` 404
       it "returns the dir if the collector owns it" $
-        request methodGet (T.encodeUtf8 "/api/filesystem/dir/TA-01/课程1-作业1")
-          [authHeader "TA-01" "abcdef"] ""
+        jsonRequest methodGet "/api/filesystem/dir/TA-01/课程1-作业1"
+          [authHeader "TA-01" "abcdef"] emptyBody
           `shouldRespondWith` matchJSON (head dirs)
       it "returns 404 if the collector doesn't own the dir" $
-        request methodGet (T.encodeUtf8 "/api/filesystem/dir/TA-02/课程2-大作业")
-          [authHeader "TA-01" "abcdef"] ""
+        jsonRequest methodGet "/api/filesystem/dir/助教-02/课程2-大作业"
+          [authHeader "TA-01" "abcdef"] emptyBody
           `shouldRespondWith` 404
+    describe "ApiPutDir" $ do
+      it "updates the dir's basic properties" $ do
+        let newDir = Directory "课程1-作业1" "TA-01" Nothing [ RuleMaxFiles 1 ]
+        jsonRequest methodPut "/api/filesystem/dir/TA-01/课程1-作业1"
+          [authHeader "TA-01" "abcdef"] newDir
+          `shouldRespondWith` 200
+        jsonRequest methodGet "/api/filesystem/dir/TA-01/课程1-作业1"
+          [authHeader "TA-01" "abcdef"] emptyBody
+          `shouldRespondWith` matchJSON newDir
+      it "can be used to transfer ownership" $ do
+        let newDir = set directory_ownerName "助教-02" (head dirs)
+        jsonRequest methodPut "/api/filesystem/dir/TA-01/课程1-作业1"
+          [authHeader "TA-01" "abcdef"] newDir
+          `shouldRespondWith` 200
+        jsonRequest methodGet "/api/filesystem/dir/助教-02/课程1-作业1"
+          [authHeader "助教-02" "中文密码"] emptyBody
+          `shouldRespondWith` matchJSON newDir
 
 dirs :: [Directory]
 dirs = [ dir1, dir2, dir3 ]

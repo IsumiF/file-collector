@@ -207,8 +207,13 @@ updateDirectory ::
 updateDirectory me ownerName dirName newDir = Db.withConnection $ do
     let role = me ^. user_role
     if role == RoleAdmin || role == RoleCollector && me ^. user_name == ownerName
-    then
-      runExceptT $ maybeToExceptT UDErrNoSuchDirectory $ do
+    then runExceptT $ do
+      maybeToExceptT UDErrCanNotUpdate $ do
+        newOwner <- MaybeT $ Db.getUserByName (convert $ newDir ^. directory_ownerName)
+        if Db.userRole newOwner == convert RoleCollector
+        then pure ()
+        else MaybeT $ pure Nothing
+      maybeToExceptT UDErrNoSuchDirectory $ do
         dirId <- MaybeT $ Db.getDirectoryId (convert ownerName) (convert dirName)
         newDirDb <- MaybeT $ dirCommonToDb newDir
         lift $ Db.updateDirectory dirId newDirDb

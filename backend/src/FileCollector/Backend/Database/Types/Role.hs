@@ -14,6 +14,7 @@ import Text.Read
 import qualified FileCollector.Common.Types.User as Common (Role (..))
 
 newtype Role = Role Common.Role
+  deriving Eq
 
 toCommonRole :: Role -> Common.Role
 toCommonRole (Role x) = x
