@@ -82,7 +82,8 @@ handlerDirUploaders (UserCollector user) ownerName dirName =
       else pure ()
 
     getDirUploaders :: AppHandler [Common.UserName]
-    getDirUploaders = Core.getDirUploaders user ownerName dirName
+    getDirUploaders = throw404OnNothing $
+      Core.getDirUploaders user ownerName dirName
 
 handlerDirContent :: ServerT ApiGetDirContent AppHandler
 handlerDirContent (UserUploader me) = Core.getDirContent me

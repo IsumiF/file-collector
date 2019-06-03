@@ -6,6 +6,7 @@ module FileCollector.Backend.Test.DirectorySpec
   ) where
 
 import Control.Lens
+import Data.Text (Text)
 import Data.Time
 import Network.HTTP.Types.Header (Header)
 import Network.HTTP.Types.Method
@@ -80,6 +81,30 @@ spec = with defaultApp $ do
         jsonRequest methodDelete "/api/filesystem/dir/TA-01/课程1-作业1"
           [authHeaderTA2] emptyBody
           `shouldRespondWith` 404
+    describe "ApiDirUploaders.Get" $ do
+      it "returns uploaders of a directory" $
+        jsonRequest methodGet (baseUrl <> "TA-01/课程1-作业1/uploaders")
+          [authHeaderTA1] emptyBody
+          `shouldRespondWith` matchJSON (fmap UserName ["zelinf", "同学C"])
+      it "rejects with 404 if the collector is not the owner of the dir" $
+        jsonRequest methodGet (baseUrl <> "TA-01/课程1-作业1/uploaders")
+          [authHeaderTA2] emptyBody
+          `shouldRespondWith` 404
+    describe "ApiDirUploaders.Put" $
+      it "updates the uploader list of a directory" $ do
+        jsonRequest methodPut (baseUrl <> "TA-01/课程1-作业1/uploaders")
+          [authHeaderTA1] (fmap UserName ["zelinf", "lagrand"])
+          `shouldRespondWith` 200
+        jsonRequest methodGet (baseUrl <> "TA-01/课程1-作业1/uploaders")
+          [authHeaderTA1] emptyBody
+          `shouldRespondWith` matchJSON (fmap UserName ["zelinf", "lagrand"])
+    describe "ApiGetDirContent" $
+      it "returns the uploaded files of an uploader" $
+        jsonRequest methodGet (baseUrl <> "TA-01/课程1-作业1/file")
+          [authHeaderZelinf] emptyBody
+          `shouldRespondWith` matchJSON ([] :: [Text])
+  where
+    baseUrl = "/api/filesystem/dir/"
 
 dirs :: [Directory]
 dirs = [ dir1, dir2, dir3 ]
@@ -108,3 +133,6 @@ authHeaderTA1 = authHeader "TA-01" "abcdef"
 
 authHeaderTA2 :: Header
 authHeaderTA2 = authHeader "助教-02" "中文密码"
+
+authHeaderZelinf :: Header
+authHeaderZelinf = authHeader "zelinf" "abcdef"

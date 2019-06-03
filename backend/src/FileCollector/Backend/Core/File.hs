@@ -248,8 +248,6 @@ deleteDirectory _ me ownerName dirName =
       then throwE DdeNoSuchDirectory
       else pure ()
       dirId <- maybeToExceptT DdeNoSuchDirectory $ MaybeT $ Db.getDirectoryId (convert ownerName) (convert dirName)
-      Db.deleteAllUploadersOfDir dirId
-      Db.removeAllPendingUploadFilesOfDirectory dirId
       files <- lift $ Db.getDirectoryContent dirId
 
       deleteStatList <- for files $ \(fileId, file) -> do
@@ -260,7 +258,10 @@ deleteDirectory _ me ownerName dirName =
         else pure ()
         pure deleteStatus
       if and deleteStatList
-      then lift $ Db.deleteDirectory dirId
+      then do
+        Db.deleteAllUploadersOfDir dirId
+        Db.removeAllPendingUploadFilesOfDirectory dirId
+        Db.deleteDirectory dirId
       else throwE DdePartiallyDeleted
 
 data DeleteDirectoryError = DdeNoSuchDirectory
@@ -312,9 +313,9 @@ getDirUploaders ::
   => User -- ^me
   -> UserName
   -> DirectoryName
-  -> m [UserName]
+  -> m (Maybe [UserName])
 getDirUploaders me ownerName dirName =
-    Db.withConnection $ fmap extractMaybeList $ runMaybeT $
+    Db.withConnection $ runMaybeT $
       if (me ^. user_name == ownerName) || (me ^. user_role) == RoleAdmin
       then do
         dirId <- MaybeT $ Db.getDirectoryId (convert ownerName) (convert dirName)
