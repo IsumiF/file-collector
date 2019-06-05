@@ -47,16 +47,21 @@ main = do
         hPutStrLn stderr "Can't read configuration file"
         exitFailure'
       Just config -> do
-          warpApp <- mainAsWai (config ^. config_other) (pure ())
+          warpApp <- mainAsWai' (config ^. config_other) (pure ())
           let warpSettings =
                 Warp.setPort (config ^. (config_warp . warpConfig_port))
                 Warp.defaultSettings
           Warp.runSettings warpSettings warpApp
 
+mainAsWai' :: OtherConfig -> App () -> IO Application
+mainAsWai' config postAppInit = do
+    (app, _) <- mainAsWai config postAppInit
+    pure app
+
 -- | Initializes the server and returns a wai 'Application'
 mainAsWai :: OtherConfig
-          -> App () -- ^code to run after initialized the app
-          -> IO Application
+          -> App a -- ^code to run after initialized the app
+          -> IO (Application, a)
 mainAsWai config postAppInit = do
     (logger, _) <- newLoggerStdout (coerce (config ^. otherConfig_logLevel))
     sqlPool :: Pool SqlBackend <- flip runLoggingT logger $
@@ -65,10 +70,10 @@ mainAsWai config postAppInit = do
     flip runApp appEnv $ do
       Db.withConnection Database.initialize
       aliyunStatus <- liftIO Aliyun.initialize
-      if not aliyunStatus
-      then $(logError) "Aliyun initialization failed" >> exitFailure'
-      else postAppInit
-      pure $ servantApp appEnv
+      x <- if not aliyunStatus
+           then $(logError) "Aliyun initialization failed" >> exitFailure'
+           else postAppInit
+      pure $ (servantApp appEnv, x)
 
 exitFailure' :: MonadIO m => m a
 exitFailure' = liftIO exitFailure

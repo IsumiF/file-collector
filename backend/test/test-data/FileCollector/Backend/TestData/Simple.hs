@@ -5,13 +5,15 @@
 module FileCollector.Backend.TestData.Simple
   ( populateTestData
   , samplePasswords
+  , sampleFiles
   ) where
 
 import           Control.Monad.IO.Class
+import           Control.Monad.Logger
 import           Control.Monad.Reader
 import           Data.Bifunctor (second)
 import           Data.ByteString (ByteString)
-import qualified Data.ByteString as ByteString
+import qualified Data.ByteString as BS
 import           Data.List ((!!))
 import           Data.Text (Text)
 import qualified Data.Text as Text
@@ -20,26 +22,27 @@ import           Database.Persist
 import           Database.Persist.Sql (SqlBackend)
 import           Numeric (readHex)
 
-import           FileCollector.Backend.Database.Types.CanUploadTo
-import           FileCollector.Backend.Database.Types.Directory
-import           FileCollector.Backend.Database.Types.Role
-import           FileCollector.Backend.Database.Types.UploadRule
-import           FileCollector.Backend.Database.Types.User
+import           FileCollector.Backend.Database.Types
 import           FileCollector.Common.Base.Convertible
-import qualified FileCollector.Common.Types.Directory as Common
-import qualified FileCollector.Common.Types.User as Common
+import qualified FileCollector.Common.Types as Common
 
 {-| Insert test data into database
 -}
-populateTestData :: (MonadIO m, MonadReader SqlBackend m)
+populateTestData :: (MonadIO m, MonadReader SqlBackend m, MonadLogger m)
                  => m ()
-populateTestData = liftPersist $ do
-    insert_ $ User "Isumi Fly" (snd $ samplePasswords !! 1) (convert Common.RoleAdmin)
-    ta1 <- insert $ User "TA-01" (snd $ samplePasswords !! 0) (convert Common.RoleCollector)
-    ta2 <- insert $ User "助教-02" (snd $ samplePasswords !! 2) (convert Common.RoleCollector)
-    stu1 <- insert $ User "zelinf" (snd $ samplePasswords !! 0) (convert Common.RoleUploader)
-    stu2 <- insert $ User "lagrand" (snd $ samplePasswords !! 0) (convert Common.RoleUploader)
-    stu3 <- insert $ User "同学C" (snd $ samplePasswords !! 1) (convert Common.RoleUploader)
+populateTestData = do
+    liftPersist $ insert_ $
+      User "Isumi Fly" (snd $ samplePasswords !! 1) (convert Common.RoleAdmin)
+    ta1 <- liftPersist $ insert $
+      User "TA-01" (snd $ head samplePasswords) (convert Common.RoleCollector)
+    ta2 <- liftPersist $ insert $
+      User "助教-02" (snd $ samplePasswords !! 2) (convert Common.RoleCollector)
+    stu1 <- liftPersist $ insert $
+      User "zelinf" (snd $ head samplePasswords) (convert Common.RoleUploader)
+    stu2 <- liftPersist $ insert $
+      User "lagrand" (snd $ head samplePasswords) (convert Common.RoleUploader)
+    stu3 <- liftPersist $ insert $
+      User "同学C" (snd $ samplePasswords !! 1) (convert Common.RoleUploader)
 
     let lesson1Rules :: [UploadRule] = fmap convert
           [ Common.RuleMaxFiles 1
@@ -47,13 +50,13 @@ populateTestData = liftPersist $ do
           , Common.RuleFileNameFormat "[[:digit:]]{8}-.+\\.[[:alnum:]\\.]+"
           ]
 
-    dir1 <- insert $ Directory "课程1-作业1" ta1
+    dir1 <- liftPersist $ insert $ Directory "课程1-作业1" ta1
       (Just $ UTCTime (fromGregorian 2019 5 8) 0)
       lesson1Rules
-    dir2 <- insert $ Directory "课程1-作业2" ta1
+    dir2 <- liftPersist $ insert $ Directory "课程1-作业2" ta1
       (Just $ UTCTime (fromGregorian 2019 6 8) 0)
       lesson1Rules
-    dir3 <- insert $ Directory "课程2-大作业" ta2
+    dir3 <- liftPersist $ insert $ Directory "课程2-大作业" ta2
       Nothing
       ( fmap convert
         [ Common.RuleMaxFiles 2
@@ -61,12 +64,31 @@ populateTestData = liftPersist $ do
         ]
       )
 
-    insert_ $ CanUploadTo stu1 dir1
-    insert_ $ CanUploadTo stu1 dir2
-    insert_ $ CanUploadTo stu2 dir2
-    insert_ $ CanUploadTo stu2 dir3
-    insert_ $ CanUploadTo stu3 dir1
-    insert_ $ CanUploadTo stu3 dir3
+    liftPersist $ insert_ $ CanUploadTo stu1 dir1
+    liftPersist $ insert_ $ CanUploadTo stu1 dir2
+    liftPersist $ insert_ $ CanUploadTo stu2 dir2
+    liftPersist $ insert_ $ CanUploadTo stu2 dir3
+    liftPersist $ insert_ $ CanUploadTo stu3 dir1
+    liftPersist $ insert_ $ CanUploadTo stu3 dir3
+
+    let emptyHashValue = HashValue $ Common.HashValue Common.HashTypeMD5 ""
+
+    liftPersist $ insert_ $
+      File "16337060-zelinf.txt" emptyHashValue stu1 dir1
+        (UTCTime (fromGregorian 2019 5 6) 0) "c02ccf54-8600-11e9-bc42-526af7764f64"
+    liftPersist $ insert_ $
+      File "16337063-lagrand.txt" emptyHashValue stu2 dir1
+        (UTCTime (fromGregorian 2019 5 5) (22 * 3600))
+        "c02cd1ca-8600-11e9-bc42-526af7764f64"
+    liftPersist $ insert_ $
+      File "hw3.txt" emptyHashValue stu2 dir3
+        (UTCTime (fromGregorian 2019 5 6) 0) "c02cd30a-8600-11e9-bc42-526af7764f64"
+    liftPersist $ insert_ $
+      File "hw4.txt" emptyHashValue stu3 dir3
+        (UTCTime (fromGregorian 2019 5 6) 0) "c02cd436-8600-11e9-bc42-526af7764f64"
+    liftPersist $ insert_ $
+      File "hw5.txt" emptyHashValue stu3 dir3
+        (UTCTime (fromGregorian 2019 5 6) 0) "c02cd562-8600-11e9-bc42-526af7764f64"
 
 -- |Sample passwords, in pairs of plaintext and salted hash
 samplePasswords :: [(Text, ByteString)]
@@ -88,12 +110,22 @@ samplePasswords = fmap (second (\x -> salt <> bsFromHex x))
   The salt is 64 asterisks (which has an ASCII code of 42), as defined below
 -}
 
+sampleFiles :: [(Common.File, ByteString)]
+sampleFiles =
+    [ (Common.File "16337060-zelinf.txt" "zelinf" emptyHash (UTCTime (fromGregorian 2019 5 6) 0), "Homework of zelinf")
+    , (Common.File "16337063-lagrand.txt" "lagrand" emptyHash (UTCTime (fromGregorian 2019 5 5) (22 * 3600)), "Homework of lagrand")
+    , (Common.File "hw3.txt" "lagrand" emptyHash (UTCTime (fromGregorian 2019 5 6) 0), "Sample homework 3\nlalala")
+    , (Common.File "hw4.txt" "同学C" emptyHash (UTCTime (fromGregorian 2019 5 6) 0), "Sample homework 4\nlalala")
+    , (Common.File "hw5.txt" "同学C" emptyHash (UTCTime (fromGregorian 2019 5 6) 0), "Sample homework 5\nhahaha")
+    ]
+  where
+    emptyHash = Common.HashValue Common.HashTypeMD5 ""
+
 salt :: ByteString
-salt = ByteString.replicate 64 42
+salt = BS.replicate 64 42
 
 bsFromHex :: Text -> ByteString
 bsFromHex hexStr =
-    ByteString.pack $ fmap (fst . head . readHex . Text.unpack) hexStrs
+    BS.pack $ fmap (fst . head . readHex . Text.unpack) hexStrs
   where
     hexStrs = Text.chunksOf 2 hexStr
-
