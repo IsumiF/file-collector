@@ -15,12 +15,12 @@ buttonAttr :: DomBuilder t m
            -> m (Event t (), a)
 buttonAttr attr children = do
   (e, x) <- elAttr' "button" attr children
-  pure $ (domEvent Click e, x)
+  pure (domEvent Click e, x)
 
 buttonClassAttr :: DomBuilder t m
                 => Text -- ^classes
                 -> Map Text Text -- ^attributes
                 -> m a
                 -> m (Event t (), a)
-buttonClassAttr classes attributes =
-  buttonAttr (replaceAttrClass classes attributes)
+buttonClassAttr classes attrs =
+  buttonAttr (replaceAttrClass classes attrs)

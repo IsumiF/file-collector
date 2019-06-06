@@ -6,11 +6,11 @@ module FileCollector.Frontend.Class.Language
   ( HasLanguage(..)
   ) where
 
-import           Control.Lens
-import           Data.Text                     (Text)
-import           Reflex.Dom
+import Control.Lens
+import Data.Text (Text)
+import Reflex.Dom
 
-import           FileCollector.Frontend.AppEnv
+import FileCollector.Frontend.AppEnv
 
 class HasLanguage t env where
   getLanguage :: env -> Dynamic t Text

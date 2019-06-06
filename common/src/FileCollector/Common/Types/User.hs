@@ -19,6 +19,7 @@ import           Data.Text (Text)
 import           GHC.Generics (Generic)
 import           Servant.API
 import qualified Servant.Docs as Docs
+import qualified Text.Shakespeare.I18N as I18N (ToMessage(..))
 
 import FileCollector.Common.Base.Aeson (lensDefaultOptions)
 
@@ -47,6 +48,9 @@ instance ToJSON UserName where
 instance FromJSON UserName where
   parseJSON v = UserName <$> parseJSON v
 
+instance I18N.ToMessage UserName where
+  toMessage (UserName x) = x
+ 
 instance ToJSON Role where
   toEncoding = genericToEncoding defaultOptions
 

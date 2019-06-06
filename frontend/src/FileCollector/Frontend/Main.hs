@@ -42,7 +42,7 @@ bodyElement = do
 
 primaryWidget :: forall t m. MonadWidget t m => m ()
 primaryWidget = mdo
-    (langDyn, _) <- elClass "div" "container" $ runReaderT topBar appEnv
+    (langDyn, logoutEvt) <- elClass "div" "container" $ runReaderT topBar appEnv
 
     let appEnv :: AppEnv t =
           def & appEnv_baseUrl .~ BaseFullUrl Http "127.0.0.1" 8080 "/api/"

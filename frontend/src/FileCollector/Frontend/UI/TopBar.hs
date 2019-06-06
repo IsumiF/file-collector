@@ -22,5 +22,5 @@ topBar =
     elAttr "div" ("id" =: "TopBar_root") $ do
       elAttr "div" ("id" =: "TopBar_space") blank
       langDyn <- languageChooser
-      userControl
-      pure (langDyn, undefined)
+      logoutEvt <- userControl
+      pure (langDyn, logoutEvt)
