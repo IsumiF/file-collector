@@ -13,10 +13,15 @@ import           Data.Text                               (Text)
 import           Reflex.Dom
 
 import           FileCollector.Frontend.Class.Language
+import           FileCollector.Frontend.Class.User
 import           FileCollector.Frontend.Types.LoggedUser
 
-loginWidget :: (MonadWidget t m, MonadReader env m, HasLanguage env t)
-            => m (Dynamic t LoggedUser)
+loginWidget ::
+  ( MonadWidget t m
+  , MonadReader env m
+  , HasLanguage env t
+  , HasUser env t
+  ) => m (Event t LoggedUser)
 loginWidget =
   elAttr "div" [ ("class", "col-sm-12"), ("style", "text-align: center;") ] $
     elAttr "form" [ ("style", "display: inline-block;") ] $ do
@@ -46,4 +51,4 @@ buttonAttr :: DomBuilder t m
            -> m (Event t (), a)
 buttonAttr attr children = do
   (e, x) <- elAttr' "button" attr children
-  pure $ (domEvent Click e, x)
+  pure (domEvent Click e, x)

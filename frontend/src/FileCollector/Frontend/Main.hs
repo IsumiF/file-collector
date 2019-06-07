@@ -7,17 +7,18 @@ module FileCollector.Frontend.Main
   ( jsmMain
   ) where
 
-import           Control.Lens
-import           Control.Monad.Reader
-import           Data.Default                      (def)
-import           Language.Javascript.JSaddle.Types (JSM)
-import           Reflex.Dom                        hiding (mainWidgetWithHead)
-import           Reflex.Dom.Main                   (mainWidgetWithHead)
-import           Servant.Common.BaseUrl            (BaseUrl (BaseFullUrl),
-                                                    Scheme (Http))
+import Control.Lens
+import Control.Monad.Reader
+import Data.Default (def)
+import Language.Javascript.JSaddle.Types (JSM)
+import Reflex.Dom hiding (mainWidgetWithHead)
+import Reflex.Dom.Main (mainWidgetWithHead)
+import Servant.Common.BaseUrl (BaseUrl (BaseFullUrl), Scheme (Http))
 
-import           FileCollector.Frontend.AppEnv
-import           FileCollector.Frontend.UI.TopBar  (topBar)
+import FileCollector.Frontend.AppEnv
+import FileCollector.Frontend.Service (generateServiceAccessors)
+import FileCollector.Frontend.UI.Login (loginWidget)
+import FileCollector.Frontend.UI.TopBar (topBar)
 
 jsmMain :: JSM ()
 jsmMain = mainWidgetWithHead headElement bodyElement
@@ -44,7 +45,10 @@ primaryWidget :: forall t m. MonadWidget t m => m ()
 primaryWidget = mdo
     (langDyn, logoutEvt) <- elClass "div" "container" $ runReaderT topBar appEnv
 
-    let appEnv :: AppEnv t =
-          def & appEnv_baseUrl .~ BaseFullUrl Http "127.0.0.1" 8080 "/api/"
+    let baseUrl = BaseFullUrl Http "127.0.0.1" 8080 "/api/"
+    sa <- runReaderT generateServiceAccessors baseUrl
+
+    let appEnv :: AppEnv t m =
+          def & appEnv_serviceAccessors .~ sa
               & appEnv_language .~ langDyn
     pure ()

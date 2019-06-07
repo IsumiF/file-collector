@@ -5,13 +5,13 @@ module FileCollector.Backend.Test.DirectorySpec
   ( spec
   ) where
 
-import           Control.Lens
-import           Data.Time
-import           Network.HTTP.Types.Header (Header)
-import           Network.HTTP.Types.Method
-import           Test.Hspec
-import           Test.Hspec.Wai hiding (shouldRespondWith)
+import Control.Lens
+import Data.Time
 import FileCollector.Backend.TestData.Simple (sampleFiles)
+import Network.HTTP.Types.Header (Header)
+import Network.HTTP.Types.Method
+import Test.Hspec
+import Test.Hspec.Wai hiding (shouldRespondWith)
 
 import FileCollector.Backend.Test.Util
 import FileCollector.Common.Types

@@ -13,7 +13,7 @@ module FileCollector.Common.Api.User
   , ApiDeleteUser
   , ApiGetUser
   , ApiPutUser
-  , ApiChangePasssword
+  , ApiChangePassword
   ) where
 
 import           Servant.API
@@ -23,14 +23,14 @@ import FileCollector.Common.Api.Auth (AuthAdmin, AuthUploader)
 import FileCollector.Common.Types.Password (Password)
 import FileCollector.Common.Types.User (User, UserName)
 
-type Api = "user" :>
-  ( ApiCreateUser
-  :<|> ApiGetUserList
-  :<|> ApiDeleteUser
-  :<|> ApiGetUser
-  :<|> ApiPutUser
-  :<|> ApiChangePasssword
-  )
+type Api = "user" :> ApiGetUser
+  -- ( ApiCreateUser
+  -- :<|> ApiGetUserList
+  -- :<|> ApiDeleteUser
+  -- :<|> ApiGetUser
+  -- :<|> ApiPutUser
+  -- :<|> ApiChangePassword
+  -- )
 
 type ApiCreateUser =
   AuthAdmin
@@ -56,7 +56,7 @@ type ApiPutUser =
   :> Capture "name" UserName
   :> Put '[JSON] ()
 
-type ApiChangePasssword =
+type ApiChangePassword =
   AuthUploader
   :> Capture "name" UserName
   :> "password"
