@@ -4,6 +4,7 @@ packages:
   ./common
   ./frontend
   ./backend
+  ./servant-reflex
 
 package reflex-dom
   flags: +use-warp -webkit2gtk

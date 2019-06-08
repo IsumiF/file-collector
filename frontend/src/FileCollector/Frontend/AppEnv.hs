@@ -2,13 +2,13 @@
 
 module FileCollector.Frontend.AppEnv
   ( AppEnv
+  , mkAppEnv
   , appEnv_serviceAccessors
   , appEnv_language
   , appEnv_loggedUser
   ) where
 
 import Control.Lens
-import Data.Default
 import Data.Text (Text)
 import Reflex.Dom
 
@@ -23,5 +23,8 @@ data AppEnv t m = AppEnv
 
 makeLenses ''AppEnv
 
-instance Reflex t => Default (AppEnv t m) where
-  def = AppEnv (error "Not implemented") (constDyn "zh-CN") (constDyn Nothing)
+mkAppEnv :: ServiceAccessors t m
+         -> Dynamic t Text
+         -> Dynamic t (Maybe LoggedUser)
+         -> AppEnv t m
+mkAppEnv = AppEnv

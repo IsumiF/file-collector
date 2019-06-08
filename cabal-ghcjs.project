@@ -3,6 +3,7 @@ compiler: ghcjs
 packages:
   ./common
   ./frontend
+  ./servant-reflex
 
 constraints: unix      installed
            , directory installed

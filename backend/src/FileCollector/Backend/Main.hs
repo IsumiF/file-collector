@@ -18,6 +18,7 @@ import           Data.Proxy (Proxy (Proxy))
 import           Database.Persist.Sql (SqlBackend)
 import           Database.Persist.Sqlite (createSqlitePool)
 import qualified Network.Wai.Handler.Warp as Warp
+import           Network.Wai.Middleware.Cors
 import qualified Options.Applicative as Opt
 import           Servant.Server
 import           System.Exit (exitFailure)
@@ -73,7 +74,9 @@ mainAsWai config postAppInit = do
       x <- if not aliyunStatus
            then $(logError) "Aliyun initialization failed" >> exitFailure'
            else postAppInit
-      pure $ (servantApp appEnv, x)
+      let app = servantApp appEnv
+          app' = cors (const $ Just corsPolicy) app
+      pure (app', x)
 
 exitFailure' :: MonadIO m => m a
 exitFailure' = liftIO exitFailure
@@ -120,3 +123,8 @@ makeContext env =
     :. makeAuthCheck env
     :. makeAuthCheck env
     :. EmptyContext
+
+corsPolicy :: CorsResourcePolicy
+corsPolicy =
+  let requestHeaders = "content-type" : "Authorization" : corsRequestHeaders simpleCorsResourcePolicy
+  in simpleCorsResourcePolicy { corsRequestHeaders = requestHeaders }

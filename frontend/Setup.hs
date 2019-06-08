@@ -27,7 +27,7 @@ import           System.Directory                      (getCurrentDirectory,
 import           System.FilePath                       ((</>))
 
 executableName :: String
-executableName = "app"
+executableName = "client"
 
 main :: IO ()
 main = defaultMainWithHooks customUserHooks

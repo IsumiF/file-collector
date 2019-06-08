@@ -115,7 +115,3 @@ data ServiceAccessors t m = ServiceAccessors
   }
 
 makeLenses ''ServiceAccessors
-
- -- Dynamic t (Maybe BasicAuthData) -> Event t () -> m (Event t (ReqResult () [Directory]))
--- Dynamic t (Maybe BasicAuthData) -> Dynamic t (Either Data.Text.Internal.Text UserName) -> Dynamic t (Either Data.Text.Internal.Text DirectoryName) -> Event t () -> m (Event t (ReqResult () Directory))
--- putDir :: Dynamic t (Maybe BasicAuthData) -> Dynamic t (Either Data.Text.Internal.Text UserName) -> Dynamic t (Either Data.Text.Internal.Text DirectoryName) -> Dynamic t (Either Data.Text.Internal.Text Directory) -> Event t () -> m (Event t (ReqResult () ()))

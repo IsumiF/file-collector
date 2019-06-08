@@ -1,3 +1,6 @@
 [submodule "frontend/static/extern/bulma"]
 	path = frontend/static/extern/bulma
 	url = https://github.com/jgthms/bulma
+[submodule "servant-reflex"]
+	path = servant-reflex
+	url = git@github.com:IsumiF/servant-reflex.git
