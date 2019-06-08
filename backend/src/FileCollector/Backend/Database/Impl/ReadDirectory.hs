@@ -63,7 +63,7 @@ getVisibleDirectories uploaderName = liftPersist $ do
           entities :: [(Entity CanUploadTo, Entity Directory)] <- [sqlQQ|
             SELECT ??, ?? FROM ^{CanUploadTo}
               INNER JOIN ^{Directory}
-              ON ^{Directory}.@{DirectoryId} = ^{CanUploadTo}.@{CanUploadToId}
+              ON ^{Directory}.@{DirectoryId} = ^{CanUploadTo}.@{CanUploadToDirectory}
               WHERE ^{CanUploadTo}.@{CanUploadToUser} = #{uploaderId}
           |]
           pure $ fmap (entityVal . snd) entities

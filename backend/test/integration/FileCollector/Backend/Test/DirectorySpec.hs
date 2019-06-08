@@ -19,9 +19,12 @@ import FileCollector.Common.Types
 spec :: Spec
 spec = with defaultApp $ do
     describe "ApiGetDirList" $ do
-      it "gets dirs that an uploader can upload to" $
+      it "gets dirs that an uploader (zelinf) can upload to" $
         request methodGet "/api/filesystem/dir" [authHeader "zelinf" "abcdef"] ""
           `shouldRespondWith'` matchJSON (take 2 dirs)
+      it "gets dirs that an uploader (lagrand) can upload to" $
+        request methodGet "/api/filesystem/dir" [authHeader "lagrand" "abcdef"] ""
+          `shouldRespondWith'` matchJSON (drop 1 dirs)
       it "get own dirs of collector" $
         request methodGet "/api/filesystem/dir" [authHeader "助教-02" "中文密码"] ""
           `shouldRespondWith'` matchJSON (drop 2 dirs)
