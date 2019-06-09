@@ -1,12 +1,37 @@
-#FileExplorer_heading {
+.FileExplorer_heading {
   @extend .panel-heading;
   margin-bottom: 0;
 }
-#FileExplorer_table {
+
+.FileExplorer_table {
   @extend .table;
   white-space: nowrap;
   width: 100%;
+
+  td {
+    vertical-align: middle;
+  }
 }
+
 #FileExplorer_dirCheckboxCell {
   text-align: right;
+}
+
+.FileExplorer_dirButton, .FileExplorer_dirOwnerButton {
+  @extend .button;
+  @extend .is-outlined;
+}
+
+.FileExplorer_colFitContent {
+  width: fit-content;
+}
+
+.FileExplorer_colFill {
+  width: fill;
+}
+
+#FileExplorer_fileBackButton {
+  @extend .button;
+  @extend .is-primary;
+  margin-right: 1em;
 }

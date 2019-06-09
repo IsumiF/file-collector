@@ -31,7 +31,7 @@ data File = File
   , _file_uploaderName :: UserName
   , _file_hash         :: HashValue
   , _file_lastModified :: UTCTime
-  } deriving Generic
+  } deriving (Generic, Show, Eq)
 
 newtype FileName = FileName Text
   deriving (Generic, Show, Eq, FromJSON, ToJSON, FromHttpApiData, ToHttpApiData, IsString)

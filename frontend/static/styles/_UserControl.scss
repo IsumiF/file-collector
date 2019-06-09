@@ -16,11 +16,6 @@
   width: auto;
 }
 
-#UserControl_logout {
-  @extend .button;
-  @extend .is-primary;
-}
-
 #UserControl_name {
   @extend .dropdown-item;
   white-space: nowrap;

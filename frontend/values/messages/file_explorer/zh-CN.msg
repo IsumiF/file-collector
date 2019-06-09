@@ -2,3 +2,8 @@ DirectoryListHeader: 文件夹列表
 SelectAll: 全选
 DirName: 名称
 DirOwner: 所有者
+FileName: 文件名
+UploaderName: 上传者姓名
+LastModificationTime: 最后修改时间
+Back: 返回
+Refresh: 刷新

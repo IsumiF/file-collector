@@ -24,7 +24,7 @@ spec = with defaultApp $ do
           `shouldRespondWith'` matchJSON (take 2 dirs)
       it "gets dirs that an uploader (lagrand) can upload to" $
         request methodGet "/api/filesystem/dir" [authHeader "lagrand" "abcdef"] ""
-          `shouldRespondWith'` matchJSON (drop 1 dirs)
+          `shouldRespondWith'` matchJSON (take 2 dirs)
       it "get own dirs of collector" $
         request methodGet "/api/filesystem/dir" [authHeader "助教-02" "中文密码"] ""
           `shouldRespondWith'` matchJSON (drop 2 dirs)
@@ -85,9 +85,9 @@ spec = with defaultApp $ do
           `shouldRespondWith'` 404
     describe "ApiDirUploaders.Get" $ do
       it "returns uploaders of a directory" $
-        jsonRequest methodGet (baseUrl <> "TA-01/课程1-作业1/uploaders")
+        jsonRequest methodGet (baseUrl <> "TA-01/课程1-作业2/uploaders")
           [authHeaderTA1] emptyBody
-          `shouldRespondWith'` matchJSON (fmap UserName ["zelinf", "同学C"])
+          `shouldRespondWith'` matchJSON (fmap UserName ["zelinf", "lagrand"])
       it "rejects with 404 if the collector is not the owner of the dir" $
         jsonRequest methodGet (baseUrl <> "TA-01/课程1-作业1/uploaders")
           [authHeaderTA2] emptyBody

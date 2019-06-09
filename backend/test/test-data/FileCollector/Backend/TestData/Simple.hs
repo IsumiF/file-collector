@@ -66,8 +66,8 @@ populateTestData = do
 
     liftPersist $ insert_ $ CanUploadTo stu1 dir1
     liftPersist $ insert_ $ CanUploadTo stu1 dir2
+    liftPersist $ insert_ $ CanUploadTo stu2 dir1
     liftPersist $ insert_ $ CanUploadTo stu2 dir2
-    liftPersist $ insert_ $ CanUploadTo stu2 dir3
     liftPersist $ insert_ $ CanUploadTo stu3 dir1
     liftPersist $ insert_ $ CanUploadTo stu3 dir3
 
@@ -81,7 +81,7 @@ populateTestData = do
         (UTCTime (fromGregorian 2019 5 5) (22 * 3600))
         "c02cd1ca-8600-11e9-bc42-526af7764f64"
     liftPersist $ insert_ $
-      File "hw3.txt" emptyHashValue stu2 dir3
+      File "hw3.txt" emptyHashValue stu3 dir3
         (UTCTime (fromGregorian 2019 5 6) 0) "c02cd30a-8600-11e9-bc42-526af7764f64"
     liftPersist $ insert_ $
       File "hw4.txt" emptyHashValue stu3 dir3

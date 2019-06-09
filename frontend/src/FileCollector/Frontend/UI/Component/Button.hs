@@ -1,6 +1,7 @@
 module FileCollector.Frontend.UI.Component.Button
   ( buttonAttr
   , buttonClassAttr
+  , buttonDynAttr
   ) where
 
 import           Data.Map.Strict                          (Map)
@@ -24,3 +25,11 @@ buttonClassAttr :: DomBuilder t m
                 -> m (Event t (), a)
 buttonClassAttr classes attrs =
   buttonAttr (replaceAttrClass classes attrs)
+
+buttonDynAttr :: (DomBuilder t m, PostBuild t m)
+              => Dynamic t (Map Text Text)
+              -> m a
+              -> m (Event t (), a)
+buttonDynAttr attrDyn sub = do
+    (e, r) <- elDynAttr' "button" attrDyn sub
+    pure (domEvent Click e, r)
