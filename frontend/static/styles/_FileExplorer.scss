@@ -1,0 +1,12 @@
+#FileExplorer_heading {
+  @extend .panel-heading;
+  margin-bottom: 0;
+}
+#FileExplorer_table {
+  @extend .table;
+  white-space: nowrap;
+  width: 100%;
+}
+#FileExplorer_dirCheckboxCell {
+  text-align: right;
+}

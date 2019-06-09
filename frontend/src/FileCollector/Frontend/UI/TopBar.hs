@@ -19,8 +19,9 @@ topBar ::
   ) =>
     m (Dynamic t Text, Event t ()) -- ^(language, logout event)
 topBar =
-    elAttr "div" ("id" =: "TopBar_root") $ do
-      elAttr "div" ("id" =: "TopBar_space") blank
-      langDyn <- languageChooser
-      logoutEvt <- userControl
-      pure (langDyn, logoutEvt)
+    elClass "div" "container" $
+      elAttr "div" ("id" =: "TopBar_root") $ do
+        elAttr "div" ("id" =: "TopBar_space") blank
+        langDyn <- languageChooser
+        logoutEvt <- userControl
+        pure (langDyn, logoutEvt)

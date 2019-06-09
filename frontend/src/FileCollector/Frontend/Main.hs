@@ -18,6 +18,7 @@ import qualified FileCollector.Frontend.Core.Login as Core
 import           FileCollector.Frontend.Service (generateServiceAccessors)
 import           FileCollector.Frontend.UI.Login (loginWidget)
 import           FileCollector.Frontend.UI.TopBar (topBar)
+import qualified FileCollector.Frontend.UI.FileExplorer as FileExplorer
 
 jsmMain :: JSM ()
 jsmMain = mainWidgetWithHead headElement bodyElement
@@ -43,10 +44,14 @@ bodyElement = do
 primaryWidget :: forall t m. MonadWidget t m => m ()
 primaryWidget = mdo
     (langDyn', loggedUserDyn') <- flip runReaderT appEnv $ do
-      (langDyn, logoutEvt) <- elClass "div" "container" $ runReaderT topBar appEnv
-      loginEvt <- loginWidget
-      loggedUserDyn <- Core.combineUserEvent logoutEvt loginEvt
-      pure (langDyn, loggedUserDyn)
+      (langDyn, logoutEvt) <- topBar
+      elClass "section" "section" $
+        divClass "container" $ do
+          loginEvt <- loginWidget
+          FileExplorer.widget
+
+          loggedUserDyn <- Core.combineUserEvent logoutEvt loginEvt
+          pure (langDyn, loggedUserDyn)
 
     let baseUrl = BaseFullUrl Http "127.0.0.1" 8080 ""
     sa <- runReaderT generateServiceAccessors baseUrl

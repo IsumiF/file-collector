@@ -35,7 +35,7 @@ login ::
   ) => Event t (UserName, Password)
     -> m (Event t LoggedUser)
 login credEvt = do
-    let authDataEvt = fmap credToAuthData (traceEventWith show credEvt)
+    let authDataEvt = fmap credToAuthData credEvt
     authDataDyn <- foldDyn (\x _ -> Just x) Nothing authDataEvt
     let userNameEvt = fmap fst credEvt
     userNameDyn <- foldDyn (\x _ -> Right x) (Left ("" :: Text)) userNameEvt

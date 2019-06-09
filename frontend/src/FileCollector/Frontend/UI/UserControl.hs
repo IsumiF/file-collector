@@ -1,6 +1,5 @@
 {-# LANGUAGE RecursiveDo         #-}
 {-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE LambdaCase #-}
 
 module FileCollector.Frontend.UI.UserControl
   ( userControl
