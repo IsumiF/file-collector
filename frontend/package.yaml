@@ -24,7 +24,8 @@ dependencies:
 - aeson ^>= 1.3.1.1
 - containers ^>= 0.5.11
 - jsaddle ^>= 0.9.6.0
-- jsaddle-dom
+- jsaddle-dom ^>= 0.9.3.1
+- ghcjs-dom ^>= 0.9.4.0
 - reflex ^>= 0.5.0.1
 - reflex-dom ^>= 0.4
 - reflex-dom-core ^>= 0.4
@@ -52,6 +53,8 @@ library:
   - src
   c-sources:
   - csrc/**.c
+  js-sources:
+  - jssrc/**/*.js
 
 executables:
   client:

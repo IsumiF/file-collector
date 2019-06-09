@@ -6,9 +6,8 @@ module FileCollector.Frontend.UI.FileExplorer
   ( widget
   ) where
 
-import Control.Lens
-import Control.Monad.Reader
--- import Data.Map.Strict (Map)
+import           Control.Lens
+import           Control.Monad.Reader
 import           Data.Foldable (sequenceA_)
 import           Data.Maybe (isJust)
 import           Data.Proxy
@@ -25,6 +24,7 @@ import qualified FileCollector.Frontend.Class.Service.MonadFile as Service
 import           FileCollector.Frontend.Class.User
 import           FileCollector.Frontend.Message.FileExplorer
 import           FileCollector.Frontend.UI.Component.Button
+import qualified FileCollector.Frontend.Core.File as Core
 
 widget ::
   ( MonadWidget t m
@@ -33,6 +33,7 @@ widget ::
   , HasUser t env
   , Service.MonadDirectory t m
   , Service.MonadDirectoryContent t m
+  , Service.MonadFile t m
   ) => m ()
 widget = showIfLoggedIn $ mdo
     viewingDirEvt' <- dyn $ ffor viewingDirDyn $ \case
@@ -59,6 +60,7 @@ fileWidget ::
   , MonadReader env m
   , HasLanguage t env
   , Service.MonadDirectoryContent t m
+  , Service.MonadFile t m
   ) => Directory
     -> m (Event t ()) -- ^on click back
 fileWidget dir =
@@ -85,7 +87,7 @@ fileWidget dir =
                   checkbox False cbConfig
           r <- el "tbody" $
             dyn $ ffor fileListDyn $ \files ->
-              leftmost <$> traverse (fileRow selectAllEvt) files
+              leftmost <$> traverse (fileRow selectAllEvt dir) files
 
           let selectAllEvt = void $ ffilter id (_checkbox_change cb)
           pure r
@@ -118,11 +120,14 @@ fileWidget dir =
     dirName = dir ^. directory_name
     renderMsg' = renderMsg (Proxy :: Proxy env) FileExplorer
 
-fileRow :: MonadWidget t m
-        => Event t () -- ^select all
-        -> File
-        -> m (Event t ()) -- ^unselect current row
-fileRow selectAllEvt file =
+fileRow ::
+  ( MonadWidget t m
+  , Service.MonadFile t m
+  ) => Event t () -- ^select all
+    -> Directory -- ^the directory that contains the file
+    -> File
+    -> m (Event t ()) -- ^unselect current row
+fileRow selectAllEvt dir file =
     el "tr" $ mdo
       (clickFileNameEvt, _) <- el "td" $ buttonAttr ("class" =: "button is-outlined") $
         text (convert $ file ^. file_name)
@@ -134,16 +139,15 @@ fileRow selectAllEvt file =
         checkbox False cbConf
 
       let cbConf = CheckboxConfig (fmap (const True) selectAllEvt) (constDyn mempty)
-      pure $ void (ffilter not (_checkbox_change cb))
+      let fullFilePath = FullFilePath
+            (dir ^. directory_ownerName)
+            (dir ^. directory_name)
+            (file ^. file_uploaderName)
+            (file ^. file_name)
+      
+      Core.downloadFile fullFilePath clickFileNameEvt
 
-downloadFile ::
-  ( MonadWidget t m
-  , Service.MonadFile t m
-  ) => Directory
-    -> UserName
-    -> FileName
-    -> m ()
-downloadFile dir uploaderName fileName = undefined
+      pure $ void (ffilter not (_checkbox_change cb))
 
 colsFillAt :: DomBuilder t m
            => Int -- ^index of col to set to 'width: fill'
