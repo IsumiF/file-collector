@@ -9,9 +9,12 @@ module FileCollector.Frontend.UI.FileExplorer
 import           Control.Lens
 import           Control.Monad.Reader
 import           Data.Foldable (sequenceA_)
-import           Data.Maybe (isJust)
+import           Data.Maybe (listToMaybe)
 import           Data.Proxy
+import           Data.Text (Text)
 import qualified Data.Text as T
+import qualified GHCJS.DOM.File as DOMFile
+import qualified GHCJS.DOM.Types as DOM (File)
 import           Reflex.Dom
 import           Servant.Reflex (ReqResult (..))
 
@@ -22,9 +25,10 @@ import qualified FileCollector.Frontend.Class.Service.MonadDirectory as Service
 import qualified FileCollector.Frontend.Class.Service.MonadDirectoryContent as Service
 import qualified FileCollector.Frontend.Class.Service.MonadFile as Service
 import           FileCollector.Frontend.Class.User
+import qualified FileCollector.Frontend.Core.File as Core
 import           FileCollector.Frontend.Message.FileExplorer
 import           FileCollector.Frontend.UI.Component.Button
-import qualified FileCollector.Frontend.Core.File as Core
+import           FileCollector.Frontend.UI.Component.PopupMessage
 
 widget ::
   ( MonadWidget t m
@@ -37,7 +41,7 @@ widget ::
   ) => m ()
 widget = showIfLoggedIn $ mdo
     viewingDirEvt' <- dyn $ ffor viewingDirDyn $ \case
-      Nothing -> (fmap . fmap) Just directoryWidget
+      Nothing -> (fmap . fmap) Just (lift directoryWidget)
       Just viewingDir ->  (fmap . fmap) (const Nothing) (fileWidget viewingDir)
     viewingDirEvt <- switchHold never viewingDirEvt'
     viewingDirDyn <- holdDyn Nothing viewingDirEvt
@@ -48,31 +52,38 @@ showIfLoggedIn ::
   ( MonadWidget t m
   , MonadReader env m
   , HasUser t env
-  ) => m ()
+  ) => ReaderT User m ()
     -> m ()
 showIfLoggedIn sub = do
     userDyn <- asks getUser
-    dyn_ $ ffor userDyn $ \userMaybe -> if isJust userMaybe then sub else blank
+    dyn_ $ ffor userDyn $ \userMaybe ->
+      case userMaybe of
+        Just user -> runReaderT sub user
+        Nothing   -> blank
 
 -- |File list in a directory
 fileWidget ::
   ( MonadWidget t m
   , MonadReader env m
   , HasLanguage t env
+  , HasUser t env
   , Service.MonadDirectoryContent t m
   , Service.MonadFile t m
   ) => Directory
-    -> m (Event t ()) -- ^on click back
+    -> ReaderT User m (Event t ()) -- ^on click back
 fileWidget dir =
     elClass "nav" "panel" $ mdo
       elClass "p" "FileExplorer_heading" $ text (convert dirName)
-      (backEvt, clickRefresh) <- divClass "panel-block" $
-        elAttr "div" ("style" =: "display: flex;") $ do
-          backEvt' <- fmap fst $ buttonAttr ("id" =: "FileExplorer_fileBackButton") $
-            dynText msgBack
-          refreshEvt' <- fmap fst $ buttonClassAttr "button is-primary" mempty $
-            dynText msgRefresh
-          pure (backEvt', refreshEvt')
+      (backEvt, clickRefresh, uploadSelectedEvt, selectedFilesDyn) <-
+        divClass "panel-block" $
+          elAttr "div" ("id" =: "FileExplorer_toolBar") $
+            (,,,) <$> (fmap fst $ buttonAttr ("id" =: "FileExplorer_fileBackButton") $
+                        dynText msgBack)
+                  <*> (fmap fst $ buttonClassAttr "button is-primary" mempty $
+                        dynText msgRefresh)
+                  <*> (fmap fst $ buttonClassAttr "button" mempty $
+                        dynText msgUploadSelected)
+                  <*> fileChooser msgChooseFile
       anyUnselectEvtEvt <- divClass "panel-block" $
         elClass "table" "FileExplorer_table" $ mdo
           colsFillAt 2 4
@@ -87,13 +98,13 @@ fileWidget dir =
                   checkbox False cbConfig
           r <- el "tbody" $
             dyn $ ffor fileListDyn $ \files ->
-              leftmost <$> traverse (fileRow selectAllEvt dir) files
+              leftmost <$> traverse (lift . fileRow selectAllEvt dir) files
 
           let selectAllEvt = void $ ffilter id (_checkbox_change cb)
           pure r
 
-      let refreshEvt = leftmost [postBuildEvt, clickRefresh]
-      fileListReqResultEvt <- Service.getDirContent
+      let refreshEvt = leftmost [postBuildEvt, clickRefresh, void uploadFileResult]
+      fileListReqResultEvt <- lift $ Service.getDirContent
         (constDyn . Right $ dir ^. directory_ownerName)
         (constDyn . Right $ dir ^. directory_name)
         refreshEvt
@@ -105,6 +116,18 @@ fileWidget dir =
       anyUnselectEvt <- switchHold never anyUnselectEvtEvt
       let cbConfig = CheckboxConfig (False <$ anyUnselectEvt) (constDyn mempty)
 
+      -- Upload new file
+      user <- ask
+      uploadFileResult <- lift $ uploadFile uploadSelectedEvt selectedFilesDyn $
+        FullFilePath (dir ^. directory_ownerName)
+                     (dir ^. directory_name)
+                     (user ^. user_name)
+      uploadFileResultDyn <- holdDyn False uploadFileResult
+      let msgUploadResultDyn = do
+            r <- uploadFileResultDyn
+            if r then msgUploadSucceeded else msgUploadFailed
+      popupMessage msgUploadResultDyn uploadFileResult
+
       -- Messages
       msgFileName <- renderMsg' MsgFileName
       msgUploaderName <- renderMsg' MsgUploaderName
@@ -112,13 +135,35 @@ fileWidget dir =
       msgBack <- renderMsg' MsgBack
       msgRefresh <- renderMsg' MsgRefresh
       msgSelectAll <- renderMsg' MsgSelectAll
+      msgUploadSelected <- renderMsg' MsgUploadSelected
+      msgChooseFile <- renderMsg' MsgChooseFile
+      msgUploadSucceeded <- renderMsg' MsgUploadSucceeded
+      msgUploadFailed <- renderMsg' MsgUploadFailed
+
       --
       postBuildEvt <- getPostBuild
       --
       pure backEvt
   where
     dirName = dir ^. directory_name
-    renderMsg' = renderMsg (Proxy :: Proxy env) FileExplorer
+    renderMsg' = lift . renderMsg (Proxy :: Proxy env) FileExplorer
+
+uploadFile ::
+  ( MonadWidget t m
+  , Service.MonadFile t m
+  ) => Event t () -- ^trigger
+    -> Dynamic t [DOM.File] -- ^selected files (we only use the first for now)
+    -> (FileName -> FullFilePath)
+    -> m (Event t Bool)
+uploadFile triggerEvt filesDyn nameToFullPath = do
+    let fileDyn = fmap listToMaybe filesDyn
+        triggerEvtWithFile = fmapMaybe listToMaybe (tagPromptlyDyn filesDyn triggerEvt)
+
+    fullPathEvt <- performEvent $ ffor triggerEvtWithFile $ \domFile -> do
+      (domFileName :: Text) <- DOMFile.getName domFile
+      pure $ nameToFullPath (FileName domFileName)
+
+    Core.uploadDomFile fullPathEvt fileDyn
 
 fileRow ::
   ( MonadWidget t m
@@ -144,10 +189,29 @@ fileRow selectAllEvt dir file =
             (dir ^. directory_name)
             (file ^. file_uploaderName)
             (file ^. file_name)
-      
+
       Core.downloadFile fullFilePath clickFileNameEvt
 
       pure $ void (ffilter not (_checkbox_change cb))
+
+fileChooser :: MonadWidget t m
+            => Dynamic t Text
+            -> m (Dynamic t [DOM.File])
+fileChooser msgChooseFile =
+    divClass "file" $
+      elClass "label" "file-label" $ do
+        fi <- fileInput (FileInputConfig . constDyn $ "class" =: "file-input")
+        fileNamesDyn <- Core.getDomFileNames (value fi)
+        elClass "span" "file-cta" $ do
+          elClass "span" "file-icon" $
+            elClass "i" "fas fa-upload" blank
+          elClass "span" "file-label" $ dynText msgChooseFile
+        elClass "span" "file-name" $ dynText (fmap (headOrDefault "") fileNamesDyn)
+        pure $ value fi
+    
+headOrDefault :: a -> [a] -> a
+headOrDefault y []     = y
+headOrDefault _ (x: _) = x
 
 colsFillAt :: DomBuilder t m
            => Int -- ^index of col to set to 'width: fill'

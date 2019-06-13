@@ -53,8 +53,6 @@ library:
   - src
   c-sources:
   - csrc/**.c
-  js-sources:
-  - jssrc/**/*.js
 
 executables:
   client:

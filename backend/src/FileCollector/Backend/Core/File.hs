@@ -532,6 +532,7 @@ commitPutFile ::
   , Db.MonadDirectoryUploader (ReaderT backend m)
   , Db.MonadPendingUploadFile (ReaderT backend m)
   , Oss.MonadOssService oss m
+  , MonadLogger m
   )
   => Proxy oss
   -> User
@@ -540,6 +541,7 @@ commitPutFile ::
 commitPutFile _ me fullFilePath =
     Db.withConnection $ fmap join $ runMaybeT $ runMaybeT $
       withFileAuthorized me fullFilePath $ \_ uploaderId dirId fileId -> do
+        $(logInfo) [i|User #{uploaderId} is commiting file #{fileId} to directory #{dirId}|]
         let pendingEntryKey = Db.UniquePendingUploadFile
               (convert $ fullFilePath ^. fullFilePath_fileName) uploaderId dirId
         pendingEntry <- MaybeT $ Db.getPendingUploadFile pendingEntryKey
@@ -556,8 +558,9 @@ commitPutFile _ me fullFilePath =
               (Db.pendingUploadFileDirectory pendingEntry)
               lastModified'
         case fileId of
-          Nothing ->
+          Nothing -> do
             void $ Db.addFile $ mkNewFile (Db.pendingUploadFileRawPath pendingEntry)
+            Db.removePendingUploadFile pendingEntryKey
           Just fileId' -> do
             existingFile <- MaybeT $ Db.getFileById fileId'
             Db.updateFile fileId' (mkNewFile (Db.fileRawPath existingFile))

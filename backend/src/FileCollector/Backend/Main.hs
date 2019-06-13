@@ -17,6 +17,7 @@ import           Data.Pool (Pool)
 import           Data.Proxy (Proxy (Proxy))
 import           Database.Persist.Sql (SqlBackend)
 import           Database.Persist.Sqlite (createSqlitePool)
+import           Network.HTTP.Types.Method
 import qualified Network.Wai.Handler.Warp as Warp
 import           Network.Wai.Middleware.Cors
 import qualified Options.Applicative as Opt
@@ -127,4 +128,7 @@ makeContext env =
 corsPolicy :: CorsResourcePolicy
 corsPolicy =
   let requestHeaders = "content-type" : "Authorization" : corsRequestHeaders simpleCorsResourcePolicy
-  in simpleCorsResourcePolicy { corsRequestHeaders = requestHeaders }
+  in simpleCorsResourcePolicy
+       { corsRequestHeaders = requestHeaders
+       , corsMethods = [methodGet, methodPut, methodDelete, methodPost, methodHead]
+       }

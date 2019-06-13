@@ -7,3 +7,7 @@ UploaderName: 上传者姓名
 LastModificationTime: 最后修改时间
 Back: 返回
 Refresh: 刷新
+UploadSelected: 上传选中文件
+ChooseFile: 选择文件
+UploadSucceeded: 上传成功
+UploadFailed: 上传失败

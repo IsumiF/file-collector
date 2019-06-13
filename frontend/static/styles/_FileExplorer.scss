@@ -33,5 +33,13 @@
 #FileExplorer_fileBackButton {
   @extend .button;
   @extend .is-primary;
-  margin-right: 1em;
+}
+
+#FileExplorer_toolBar {
+  display: flex;
+  width: 100%;
+
+  >* {
+    margin-right: 1em;
+  }
 }

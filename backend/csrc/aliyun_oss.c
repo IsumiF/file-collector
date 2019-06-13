@@ -73,11 +73,15 @@ inline static const char *fc_aos_getSignedUrl(
     aos_str_set(&object, objectName);
     aos_table_t *headers = NULL;
     headers = aos_table_make(pool, 0);
+    apr_table_add(headers, "Content-Type", "application/octet-stream");
     apr_time_t now = apr_time_now();
     int64_t expireTime = now / 1000000 + 36000; // expires in one hour
     aos_http_request_t *req = aos_http_request_create(pool);
     req->method = method;
-
+    if (method == HTTP_PUT)
+    {
+        req->headers = headers;
+    }
     const char *urlStr =
         oss_gen_signed_url(ossClientOptions, &bucket, &object, expireTime, req);
     size_t urlStrLen = strlen(urlStr);
@@ -143,7 +147,6 @@ char *fc_aos_getFileMeta(
     char *lastModified = NULL;
     if (aos_status_is_ok(respStatus))
     {
-        printf("[DEBUG] OSS_DATE = %s\n", OSS_DATE);
         lastModifiedStr = apr_table_get(respHeaders, "Last-Modified");
         if (lastModifiedStr != NULL && lastModifiedStr[0] != '\0')
         {
