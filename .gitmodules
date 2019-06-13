@@ -3,4 +3,4 @@
 	url = https://github.com/jgthms/bulma
 [submodule "servant-reflex"]
 	path = servant-reflex
-	url = git@github.com:IsumiF/servant-reflex.git
+	url = https://github.com/IsumiF/servant-reflex.git
