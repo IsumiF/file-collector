@@ -8,6 +8,7 @@ module FileCollector.Frontend.Main
   ) where
 
 import Control.Monad.Reader
+import Data.Time (utc)
 import Language.Javascript.JSaddle.Types (JSM)
 import Reflex.Dom hiding (mainWidgetWithHead)
 import Reflex.Dom.Main (mainWidgetWithHead)
@@ -15,10 +16,11 @@ import Servant.Common.BaseUrl (BaseUrl (BaseFullUrl), Scheme (Http))
 
 import           FileCollector.Frontend.AppEnv
 import qualified FileCollector.Frontend.Core.Login as Core
+import           FileCollector.Frontend.Core.TimeZone (getBrowserTimeZone)
 import           FileCollector.Frontend.Service (generateServiceAccessors)
+import qualified FileCollector.Frontend.UI.FileExplorer as FileExplorer
 import           FileCollector.Frontend.UI.Login (loginWidget)
 import           FileCollector.Frontend.UI.TopBar (topBar)
-import qualified FileCollector.Frontend.UI.FileExplorer as FileExplorer
 
 jsmMain :: JSM ()
 jsmMain = mainWidgetWithHead headElement bodyElement
@@ -31,6 +33,7 @@ headElement = do
    <> ("content" =: "width=device-width, initial-scale=1, shrink-to-fit=no")
     ) blank
   elAttr "link" (("rel" =: "stylesheet") <> ("href" =: "styles/all.css")) blank
+  elAttr "script" ("src" =: "js/TimeZone.js") blank
 
 bodyElement :: MonadWidget t m => m ()
 bodyElement = do
@@ -55,7 +58,9 @@ primaryWidget = mdo
 
     let baseUrl = BaseFullUrl Http "127.0.0.1" 8080 ""
     sa <- runReaderT generateServiceAccessors baseUrl
+    postBuildEvt <- getPostBuild
+    timeZoneDyn <- getBrowserTimeZone postBuildEvt >>= holdDyn utc
 
-    let appEnv = mkAppEnv sa langDyn' loggedUserDyn'
-    
+    let appEnv = mkAppEnv sa langDyn' loggedUserDyn' timeZoneDyn
+
     blank

@@ -11,6 +11,7 @@ category:            Web
 extra-source-files:
 - static/styles/**.scss
 - static/*.ico
+- static/js/**/*.js
 
 ghc-options: -Wall -Wno-simplifiable-class-constraints
 

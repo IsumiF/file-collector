@@ -11,6 +11,10 @@
   td {
     vertical-align: middle;
   }
+
+  td:last-of-type {
+    text-align: right;
+  }
 }
 
 #FileExplorer_dirCheckboxCell {

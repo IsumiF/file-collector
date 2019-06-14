@@ -12,20 +12,23 @@ import           Data.Foldable (sequenceA_)
 import           Data.Maybe (listToMaybe)
 import           Data.Proxy
 import           Data.Text (Text)
-import qualified Data.Text as T
 import qualified GHCJS.DOM.File as DOMFile
 import qualified GHCJS.DOM.Types as DOM (File)
 import           Reflex.Dom
 import           Servant.Reflex (ReqResult (..))
+import qualified Data.Text as T
 
 import           FileCollector.Common.Base.Convertible
 import           FileCollector.Common.Types
 import           FileCollector.Frontend.Class.Language
+import           FileCollector.Frontend.Class.MonadTimeZone
 import qualified FileCollector.Frontend.Class.Service.MonadDirectory as Service
 import qualified FileCollector.Frontend.Class.Service.MonadDirectoryContent as Service
 import qualified FileCollector.Frontend.Class.Service.MonadFile as Service
 import           FileCollector.Frontend.Class.User
+import           FileCollector.Frontend.Core.Base
 import qualified FileCollector.Frontend.Core.File as Core
+import           FileCollector.Frontend.Core.TimeZone (showUTCTime)
 import           FileCollector.Frontend.Message.FileExplorer
 import           FileCollector.Frontend.UI.Component.Button
 import           FileCollector.Frontend.UI.Component.PopupMessage
@@ -35,6 +38,7 @@ widget ::
   , MonadReader env m
   , HasLanguage t env
   , HasUser t env
+  , MonadTimeZone t m
   , Service.MonadDirectory t m
   , Service.MonadDirectoryContent t m
   , Service.MonadFile t m
@@ -69,6 +73,7 @@ fileWidget ::
   , HasUser t env
   , Service.MonadDirectoryContent t m
   , Service.MonadFile t m
+  , MonadTimeZone t m
   ) => Directory
     -> ReaderT User m (Event t ()) -- ^on click back
 fileWidget dir =
@@ -77,13 +82,20 @@ fileWidget dir =
       (backEvt, clickRefresh, uploadSelectedEvt, selectedFilesDyn) <-
         divClass "panel-block" $
           elAttr "div" ("id" =: "FileExplorer_toolBar") $
-            (,,,) <$> (fmap fst $ buttonAttr ("id" =: "FileExplorer_fileBackButton") $
+            (,,,) <$> fmap fst (buttonAttr ("id" =: "FileExplorer_fileBackButton") $
                         dynText msgBack)
-                  <*> (fmap fst $ buttonClassAttr "button is-primary" mempty $
+                  <*> fmap fst (buttonClassAttr "button is-primary" mempty $
                         dynText msgRefresh)
-                  <*> (fmap fst $ buttonClassAttr "button" mempty $
+                  <*> fmap fst (buttonClassAttr "button" mempty $
                         dynText msgUploadSelected)
                   <*> fileChooser msgChooseFile
+      divClass "panel-block" $ -- show ddl
+        dynText ddlTextDyn
+      divClass "panel-block" $ do -- show upload rules
+        let rules = dir ^. directory_uploadRules
+        shownRules <- sequenceA <$> traverse (lift . Core.showUploadRule) (fmap constDyn rules)
+        let rulesTxt = fmap (T.intercalate ", ") shownRules
+        dynText $ msgUploadRules <> rulesTxt
       anyUnselectEvtEvt <- divClass "panel-block" $
         elClass "table" "FileExplorer_table" $ mdo
           colsFillAt 2 4
@@ -127,6 +139,15 @@ fileWidget dir =
             r <- uploadFileResultDyn
             if r then msgUploadSucceeded else msgUploadFailed
       popupMessage msgUploadResultDyn uploadFileResult
+      -- DDL Text
+      ddlTextDyn <- case dir ^. directory_expirationTime of
+        Nothing -> pure msgNoDeadline
+        Just ddl -> do
+          ddlText <- lift $ showUTCTime (constDyn ddl)
+          traverseDyn (constDyn "") ddlText msgDeadlineIs
+
+      -- Upload rules
+      
 
       -- Messages
       msgFileName <- renderMsg' MsgFileName
@@ -139,7 +160,9 @@ fileWidget dir =
       msgChooseFile <- renderMsg' MsgChooseFile
       msgUploadSucceeded <- renderMsg' MsgUploadSucceeded
       msgUploadFailed <- renderMsg' MsgUploadFailed
-
+      msgNoDeadline <- renderMsg' MsgNoDeadline
+      let msgDeadlineIs ddl = renderMsg' (MsgDeadlineIs ddl)
+      msgUploadRules <- renderMsg' MsgUploadRules
       --
       postBuildEvt <- getPostBuild
       --
@@ -168,6 +191,7 @@ uploadFile triggerEvt filesDyn nameToFullPath = do
 fileRow ::
   ( MonadWidget t m
   , Service.MonadFile t m
+  , MonadTimeZone t m
   ) => Event t () -- ^select all
     -> Directory -- ^the directory that contains the file
     -> File
@@ -178,8 +202,9 @@ fileRow selectAllEvt dir file =
         text (convert $ file ^. file_name)
       void $ el "td" $ buttonAttr ("class" =: "button is-outlined") $
         text (convert $ file ^. file_uploaderName)
-      void $ el "td" $
-        text (T.pack . show $ file ^. file_lastModified)
+      void $ el "td" $ do
+        timeText <- showUTCTime . constDyn $ file ^. file_lastModified
+        dynText timeText
       cb <- el "td" $
         checkbox False cbConf
 
@@ -208,7 +233,7 @@ fileChooser msgChooseFile =
           elClass "span" "file-label" $ dynText msgChooseFile
         elClass "span" "file-name" $ dynText (fmap (headOrDefault "") fileNamesDyn)
         pure $ value fi
-    
+
 headOrDefault :: a -> [a] -> a
 headOrDefault y []     = y
 headOrDefault _ (x: _) = x

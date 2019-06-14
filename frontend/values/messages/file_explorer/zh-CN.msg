@@ -11,3 +11,9 @@ UploadSelected: 上传选中文件
 ChooseFile: 选择文件
 UploadSucceeded: 上传成功
 UploadFailed: 上传失败
+NoDeadline: 没有DDL
+DeadlineIs time@Text: DDL为#{time}
+MaxFileSize size@Text: 单个文件不超过#{size}MB
+FileNameFormat format@Text: 文件名格式为#{format}
+MaxFiles n@Text: 最多#{n}个文件
+UploadRules: 上传约束：

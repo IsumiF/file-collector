@@ -96,6 +96,9 @@ buildWebStatic = do
         , "all.css"
         ]
 
+  -- copy js files
+  copyFiles' buildDir [(sourceDir, "js" </> "TimeZone.js")]
+
 class HasOptimisationLevel env where
   getOptimisationLevel :: env -> OptimisationLevel
 

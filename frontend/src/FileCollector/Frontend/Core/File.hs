@@ -8,10 +8,15 @@ module FileCollector.Frontend.Core.File
   , downloadFileFromUrl
   , getDomFileNames
   , uploadDomFile
+  , showUploadRule 
   ) where
 
+import           Control.Monad.Reader
 import           Data.Functor (void)
+import           Data.Proxy (Proxy (..))
 import           Data.Text (Text)
+import qualified Data.Text as T
+import           Data.Word (Word32)
 import qualified GHCJS.DOM as DOM
 import qualified GHCJS.DOM.Blob as DomBlob
 import qualified GHCJS.DOM.Document as DOM
@@ -22,10 +27,14 @@ import qualified GHCJS.DOM.HTMLLinkElement as DOM
 import qualified GHCJS.DOM.Types as DOM
 import           Reflex.Dom
 import           Servant.Reflex
+import           Text.Printf (printf)
 
 import           Control.Lens
 import           FileCollector.Common.Types
+import           FileCollector.Frontend.Class.Language
 import qualified FileCollector.Frontend.Class.Service.MonadFile as Service
+import           FileCollector.Frontend.Core.Base (traverseDyn)
+import           FileCollector.Frontend.Message.FileExplorer
 
 downloadFile ::
   ( MonadWidget t m
@@ -132,4 +141,28 @@ reqResultToMaybe _                       = Nothing
 
 isResponseSuccess :: ReqResult tag a -> Bool
 isResponseSuccess ResponseSuccess{} = True
-isResponseSuccess _ = False
+isResponseSuccess _                 = False
+
+showUploadRule ::
+  ( MonadWidget t m
+  , MonadReader env m
+  , HasLanguage t env
+  ) => Dynamic t UploadRule
+    -> m (Dynamic t Text)
+showUploadRule ruleDyn =
+    traverseDyn (constDyn "") ruleDyn $ \rule ->
+      case rule of
+        RuleMaxFileSize maxFileSize ->
+          renderMsg' (MsgMaxFileSize (fileSizeInMB maxFileSize))
+        RuleFileNameFormat nameFormat ->
+          renderMsg' (MsgFileNameFormat nameFormat)
+        RuleMaxFiles maxFiles ->
+          renderMsg' (MsgMaxFiles (T.pack . show $ maxFiles))
+  where
+    pEnv = Proxy :: Proxy env
+    renderMsg' = renderMsg pEnv FileExplorer
+
+fileSizeInMB :: Word32 -> Text
+fileSizeInMB x = T.pack . printf "%.2f" $ y
+  where
+    y = fromIntegral x / (1024 * 1024) :: Double
