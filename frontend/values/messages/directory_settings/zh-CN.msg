@@ -1,0 +1,11 @@
+Title: 修改文件夹
+Name: 名称
+Deadline: 截止时间
+UploadRules: 上传规则
+FileSizeLimit: 文件大小限制（KB）
+FileCountLimit: 文件数量限制
+FileNameFormat: 文件名格式（正则）
+UploaderList: 上传者列表
+Save: 保存
+SaveSucceeded: 保存成功
+SaveFailed: 保存失败

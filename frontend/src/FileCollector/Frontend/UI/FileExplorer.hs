@@ -12,11 +12,11 @@ import           Data.Foldable (sequenceA_)
 import           Data.Maybe (listToMaybe)
 import           Data.Proxy
 import           Data.Text (Text)
+import qualified Data.Text as T
 import qualified GHCJS.DOM.File as DOMFile
 import qualified GHCJS.DOM.Types as DOM (File)
 import           Reflex.Dom
 import           Servant.Reflex (ReqResult (..))
-import qualified Data.Text as T
 
 import           FileCollector.Common.Base.Convertible
 import           FileCollector.Common.Types
@@ -31,7 +31,10 @@ import qualified FileCollector.Frontend.Core.File as Core
 import           FileCollector.Frontend.Core.TimeZone (showUTCTime)
 import           FileCollector.Frontend.Message.FileExplorer
 import           FileCollector.Frontend.UI.Component.Button
-import           FileCollector.Frontend.UI.Component.PopupMessage
+import           FileCollector.Frontend.UI.Component.Dialog
+import           FileCollector.Frontend.UI.FileExplorer.DirectorySettings
+    (directorySettings)
+import qualified FileCollector.Frontend.Class.Service.MonadDirectoryUploaders as Service
 
 widget ::
   ( MonadWidget t m
@@ -42,10 +45,14 @@ widget ::
   , Service.MonadDirectory t m
   , Service.MonadDirectoryContent t m
   , Service.MonadFile t m
+  , Service.MonadDirectoryUploaders t m
   ) => m ()
 widget = showIfLoggedIn $ mdo
     viewingDirEvt' <- dyn $ ffor viewingDirDyn $ \case
-      Nothing -> (fmap . fmap) Just (lift directoryWidget)
+      Nothing -> do
+        user <- ask
+        let isCollector = user ^. user_role >= RoleCollector
+        (fmap . fmap) Just (lift (directoryWidget isCollector))
       Just viewingDir ->  (fmap . fmap) (const Nothing) (fileWidget viewingDir)
     viewingDirEvt <- switchHold never viewingDirEvt'
     viewingDirDyn <- holdDyn Nothing viewingDirEvt
@@ -138,7 +145,8 @@ fileWidget dir =
       let msgUploadResultDyn = do
             r <- uploadFileResultDyn
             if r then msgUploadSucceeded else msgUploadFailed
-      popupMessage msgUploadResultDyn uploadFileResult
+      popupMessage DialogStyleSuccess (ffilter id uploadFileResult) msgUploadResultDyn
+      popupMessage DialogStyleWarning (ffilter not uploadFileResult) msgUploadResultDyn
       -- DDL Text
       ddlTextDyn <- case dir ^. directory_expirationTime of
         Nothing -> pure msgNoDeadline
@@ -147,7 +155,7 @@ fileWidget dir =
           traverseDyn (constDyn "") ddlText msgDeadlineIs
 
       -- Upload rules
-      
+
 
       -- Messages
       msgFileName <- renderMsg' MsgFileName
@@ -257,25 +265,29 @@ directoryWidget ::
   , Service.MonadDirectory t m
   , MonadReader env m
   , HasLanguage t env
-  ) => m (Event t Directory) -- ^enter specific directory
-directoryWidget = mdo
+  , MonadTimeZone t m
+  , Service.MonadDirectoryUploaders t m
+  ) => Bool
+    -> m (Event t Directory) -- ^enter specific directory
+directoryWidget isCollector = mdo
     enterDirEvt <- elClass "nav" "panel" $ do
       elClass "p" "FileExplorer_heading" $ dynText dirListHeaderDyn
       divClass "panel-block" $ text "下载"
       divClass "panel-block" $
         elClass "table" "FileExplorer_table" $ mdo
-          colsFillAt 1 3
+          colsFillAt 1 4
           selectAllCb <- el "thead" $
             el "tr" $ do
               el "th" $ dynText msgDirNameDyn
               el "th" $ dynText msgDirOwnerDyn
+              when isCollector $ el "th" $ dynText msgSettings
               el "th" $
                 elClass "label" "checkbox" $ do
                   dynText msgSelectAllDyn
                   checkbox False selectAllConfig
           (anyUnselectEvt, enterDirEvt') <- el "tbody" $ do
             dirRowsEvt <- dyn $ ffor dirListDyn $ \dirs ->
-              traverse (dirRow (selectAllCb ^. checkbox_change)) dirs
+              traverse (dirRow isCollector (selectAllCb ^. checkbox_change)) dirs
             let anyUnselectEvt' = fmap (leftmost . fmap _dirRow_unSelect) dirRowsEvt
                 enterDirEvt'' = fmap (leftmost . fmap _dirRow_enterDir) dirRowsEvt
             (,) <$> switchHold never anyUnselectEvt'
@@ -289,6 +301,7 @@ directoryWidget = mdo
     msgSelectAllDyn <- renderMsg' MsgSelectAll
     msgDirNameDyn <- renderMsg' MsgDirName
     msgDirOwnerDyn <- renderMsg' MsgDirOwner
+    msgSettings <- renderMsg' MsgSettings
 
     postBuildEvt <- getPostBuild
     dirListResultEvt <- Service.getDirList postBuildEvt
@@ -305,15 +318,26 @@ directoryWidget = mdo
 
 dirRow ::
   ( MonadWidget t m
-  ) => Event t Bool -- ^select all
+  , MonadReader env m
+  , HasLanguage t env
+  , MonadTimeZone t m
+  , Service.MonadDirectoryUploaders t m
+  , Service.MonadDirectory t m
+  ) => Bool -- ^is collector
+    -> Event t Bool -- ^select all
     -> Directory
     -> m (DirRow t) -- ^on uncheck 'select' checkbox
-dirRow selectAllChangeEvt dir =
+dirRow isCollector selectAllChangeEvt dir =
     el "tr" $ mdo
       (enterDirEvt, _) <- el "td" $ buttonAttr ("class" =: "FileExplorer_dirButton") $
         text (convert dirName)
       _ <- el "td" $ buttonAttr ("class" =: "FileExplorer_dirOwnerButton") $
         text (convert $ dir ^. directory_ownerName)
+      when isCollector $ el "td" $ do
+        (clickEvt, _) <- buttonClassAttr "button" mempty $
+          elClass "span" "icon" $
+            elClass "i" "fas fa-cog" blank
+        directorySettings (fmap (const dir) clickEvt)
       cbChangeEvt <- elAttr "td" ("id" =: "FileExplorer_dirCheckboxCell") $
         elClass "label" "checkbox" $ do
           (Checkbox _ cbChangeEvt') <- checkbox False cbConf

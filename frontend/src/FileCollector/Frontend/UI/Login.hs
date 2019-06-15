@@ -42,25 +42,27 @@ loginWidget = do
       msgPassword <- renderMsg pEnv Login MsgPassword
       msgLogin <- renderMsg pEnv Login MsgLogin
 
-      elAttr "div" [ ("class", "col-sm-12"), ("style", "text-align: center;") ] $
+      elAttr "div" ("id" =: "login" <> "style" =: "text-align: center;")  $
         elAttr "form" [ ("style", "display: inline-block;") ] $ do
-          let dynAttrFormControl = constDyn [("class", "form-control")]
-          usernameDyn <- elClass "div" "form-group" $
-            elAttr "label" [ ("style", "text-align: left;") ] $ do
+          let dynAttrInput = constDyn [("class", "input")]
+          usernameDyn <- elClass "div" "loginField" $ do
+            let userNameInputId = "userNameInput"
+            elAttr "label" ("class" =: "loginFieldLabel" <> "for" =: userNameInputId) $
               dynText msgUsername
-              usernameInput <- textInput $
-                def & textInputConfig_attributes .~ dynAttrFormControl
-              pure (value usernameInput)
-          passwordDyn <- elClass "div" "form-group" $
-            elAttr "label" [ ("style", "text-align: left;") ] $ do
+            usernameInput <- elAttr "div" ("class" =: "control" <> "id" =: userNameInputId) $
+              textInput $ def & textInputConfig_attributes .~ dynAttrInput
+            pure (value usernameInput)
+          passwordDyn <- elClass "div" "loginField" $ do
+            let passwordInputId = "passwordInput"
+            elAttr "label" ("class" =: "loginFieldLabel" <> "for" =: passwordInputId) $
               dynText msgPassword
-              passwordInput <- textInput $
-                def & textInputConfig_inputType .~ "password"
-                    & textInputConfig_attributes .~ dynAttrFormControl
-              pure (value passwordInput)
+            passwordInput <- elAttr "div" ("class" =: "control" <> "id" =: passwordInputId) $
+              textInput $ def & textInputConfig_inputType .~ "password"
+                              & textInputConfig_attributes .~ dynAttrInput
+            pure (value passwordInput)
           (evLogin, _) <- elAttr "div" [ ("style", "width: 100%; text-align:center;") ] $
             buttonAttr
-              [ ("class", "btn btn-primary" )
+              [ ("class", "button is-primary" )
               , ("type", "button")
               ] $ dynText msgLogin
           

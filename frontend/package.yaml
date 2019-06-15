@@ -9,7 +9,7 @@ author:              Lagrand, Isumi Feng
 copyright:           Copyright 2019, Lagrand, Isumi Feng
 category:            Web
 extra-source-files:
-- static/styles/**.scss
+- static/styles/**/*.scss
 - static/*.ico
 - static/js/**/*.js
 
@@ -39,6 +39,7 @@ dependencies:
 - transformers ^>= 0.5.5.0
 - data-default ^>= 0.7.1.1
 - shakespeare ^>= 2.0.20
+- generic-deriving ^>= 1.12.2
 
 custom-setup:
   dependencies:

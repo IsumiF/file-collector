@@ -1,0 +1,13 @@
+.loginFieldLabel {
+  @extend .field-label;
+}
+
+.loginField {
+  @extend .field;
+  @extend .is-horizontal;
+  align-items: center;
+}
+
+#login {
+  margin-top: 1em;
+}

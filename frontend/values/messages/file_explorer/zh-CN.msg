@@ -17,3 +17,4 @@ MaxFileSize size@Text: 单个文件不超过#{size}MB
 FileNameFormat format@Text: 文件名格式为#{format}
 MaxFiles n@Text: 最多#{n}个文件
 UploadRules: 上传约束：
+Settings: 设置

@@ -17,3 +17,4 @@ MaxFileSize size@Text: Each file not exceeding #{size}MB
 FileNameFormat format@Text: File name in regex #{format}
 MaxFiles n@Text: At most #{n} files
 UploadRules: Upload Rules:
+Settings: Settings

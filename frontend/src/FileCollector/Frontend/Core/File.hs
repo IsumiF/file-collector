@@ -33,7 +33,7 @@ import           Control.Lens
 import           FileCollector.Common.Types
 import           FileCollector.Frontend.Class.Language
 import qualified FileCollector.Frontend.Class.Service.MonadFile as Service
-import           FileCollector.Frontend.Core.Base (traverseDyn)
+import           FileCollector.Frontend.Core.Base
 import           FileCollector.Frontend.Message.FileExplorer
 
 downloadFile ::
@@ -134,14 +134,6 @@ supplyFullFilePath fpDyn f =
       ((fmap . fmap) (^. fullFilePath_dirName) fpDyn)
       ((fmap . fmap) (^. fullFilePath_uploaderName) fpDyn)
       ((fmap . fmap) (^. fullFilePath_fileName) fpDyn)
-
-reqResultToMaybe :: ReqResult tag a -> Maybe a
-reqResultToMaybe (ResponseSuccess _ x _) = Just x
-reqResultToMaybe _                       = Nothing
-
-isResponseSuccess :: ReqResult tag a -> Bool
-isResponseSuccess ResponseSuccess{} = True
-isResponseSuccess _                 = False
 
 showUploadRule ::
   ( MonadWidget t m
