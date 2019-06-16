@@ -9,6 +9,7 @@ module FileCollector.Frontend.Core.File
   , getDomFileNames
   , uploadDomFile
   , showUploadRule 
+  , supplyFullFilePath
   ) where
 
 import           Control.Monad.Reader
@@ -94,13 +95,15 @@ uploadDomFile filePathEvt domFileMaybeDyn = do
 
     putResultEvt <- supplyFullFilePath fullFilePathDyn Service.putFile
       nameQParamDyn (void filePathEvt)
-
-    let uploadReqEvt = ffor (attachPromptlyDyn domFileMaybeDyn putResultEvt) $ \(domFileMaybe, reqResult) ->
+    
+    let domFileWithNameDyn' = fmap mergeTupleOfMaybes $ (,) <$> domFileMaybeDyn <*> nameDyn;
+        uploadReqEvt = ffor (attachPromptlyDyn domFileWithNameDyn' putResultEvt) $ \(domFileMaybe', reqResult) ->
           let credMaybe = reqResultToMaybe reqResult
-           in case (credMaybe, domFileMaybe) of
-                (Just (AliyunSignedUrl putUrl), Just domFile) -> do
+           in case (credMaybe, domFileMaybe') of
+                (Just (AliyunSignedUrl putUrl), Just (domFile, fileName)) -> do
                   let req = xhrRequest "PUT" putUrl $ XhrRequestConfig
-                        ("Content-Type" =: "application/octet-stream")
+                        ("Content-Type" =: "application/octet-stream"
+                        <> "Content-Disposition" =: ("filename=\"" <> fileName <> "\""))
                         Nothing
                         Nothing
                         (Just XhrResponseType_Default)
@@ -158,3 +161,7 @@ fileSizeInMB :: Word32 -> Text
 fileSizeInMB x = T.pack . printf "%.2f" $ y
   where
     y = fromIntegral x / (1024 * 1024) :: Double
+
+mergeTupleOfMaybes :: (Maybe a, Maybe b) -> Maybe (a, b)
+mergeTupleOfMaybes (Just x, Just y) = Just (x, y)
+mergeTupleOfMaybes _ = Nothing

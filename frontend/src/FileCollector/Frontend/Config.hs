@@ -15,7 +15,6 @@ import           Data.ByteString (ByteString)
 import qualified Data.ByteString.Lazy as LBS
 import           Data.FileEmbed (embedFile)
 import           Data.Text (Text)
-import           Debug.Trace (traceShow)
 import           GHC.Generics (Generic)
 
 import FileCollector.Common.Base.Aeson (lensDefaultOptions)

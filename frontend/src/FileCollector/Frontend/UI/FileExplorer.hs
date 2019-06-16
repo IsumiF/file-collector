@@ -24,6 +24,7 @@ import           FileCollector.Frontend.Class.Language
 import           FileCollector.Frontend.Class.MonadTimeZone
 import qualified FileCollector.Frontend.Class.Service.MonadDirectory as Service
 import qualified FileCollector.Frontend.Class.Service.MonadDirectoryContent as Service
+import qualified FileCollector.Frontend.Class.Service.MonadDirectoryUploaders as Service
 import qualified FileCollector.Frontend.Class.Service.MonadFile as Service
 import           FileCollector.Frontend.Class.User
 import           FileCollector.Frontend.Core.Base
@@ -34,7 +35,6 @@ import           FileCollector.Frontend.UI.Component.Button
 import           FileCollector.Frontend.UI.Component.Dialog
 import           FileCollector.Frontend.UI.FileExplorer.DirectorySettings
     (directorySettings)
-import qualified FileCollector.Frontend.Class.Service.MonadDirectoryUploaders as Service
 
 widget ::
   ( MonadWidget t m
@@ -105,19 +105,21 @@ fileWidget dir =
         dynText $ msgUploadRules <> rulesTxt
       anyUnselectEvtEvt <- divClass "panel-block" $
         elClass "table" "FileExplorer_table" $ mdo
-          colsFillAt 2 4
+          colsFillAt 2 5
           cb <- el "thead" $
             el "tr" $ do
               el "th" $ dynText msgFileName
               el "th" $ dynText msgUploaderName
               el "th" $ dynText msgLastModificationTime
+              el "th" $ dynText msgDelete
               el "th" $
                 elClass "label" "checkbox" $ do
                   dynText msgSelectAll
                   checkbox False cbConfig
           r <- el "tbody" $
-            dyn $ ffor fileListDyn $ \files ->
-              leftmost <$> traverse (lift . fileRow selectAllEvt dir) files
+            dyn $ ffor fileListDyn $ \files -> do
+              xs <- traverse (lift . fileRow selectAllEvt dir) files
+              pure (leftmost (fmap fst xs))
 
           let selectAllEvt = void $ ffilter id (_checkbox_change cb)
           pure r
@@ -171,6 +173,7 @@ fileWidget dir =
       msgNoDeadline <- renderMsg' MsgNoDeadline
       let msgDeadlineIs ddl = renderMsg' (MsgDeadlineIs ddl)
       msgUploadRules <- renderMsg' MsgUploadRules
+      msgDelete <- renderMsg' MsgDelete
       --
       postBuildEvt <- getPostBuild
       --
@@ -203,7 +206,7 @@ fileRow ::
   ) => Event t () -- ^select all
     -> Directory -- ^the directory that contains the file
     -> File
-    -> m (Event t ()) -- ^unselect current row
+    -> m (Event t (), Event t ()) -- ^unselect current row
 fileRow selectAllEvt dir file =
     el "tr" $ mdo
       (clickFileNameEvt, _) <- el "td" $ buttonAttr ("class" =: "button is-outlined") $
@@ -213,6 +216,11 @@ fileRow selectAllEvt dir file =
       void $ el "td" $ do
         timeText <- showUTCTime . constDyn $ file ^. file_lastModified
         dynText timeText
+      deleteEvt <- el "td" $ do
+        (e, _) <- buttonClassAttr "button" ("type" =: "button") $
+          elClass "span" "icon" $
+            elClass "i" "fas fa-times" blank
+        pure e
       cb <- el "td" $
         checkbox False cbConf
 
@@ -225,7 +233,10 @@ fileRow selectAllEvt dir file =
 
       Core.downloadFile fullFilePath clickFileNameEvt
 
-      pure $ void (ffilter not (_checkbox_change cb))
+      void $ Core.supplyFullFilePath (constDyn (Right fullFilePath)) Service.deleteFile deleteEvt
+
+      pure (void (ffilter not (_checkbox_change cb)), never)
+      -- pure (void (ffilter not (_checkbox_change cb)), void deleteFileReqResult)
 
 fileChooser :: MonadWidget t m
             => Dynamic t Text
@@ -263,6 +274,7 @@ colsFillAt i n =
 directoryWidget ::
   ( MonadWidget t m
   , Service.MonadDirectory t m
+  , Service.MonadFile t m
   , MonadReader env m
   , HasLanguage t env
   , MonadTimeZone t m
@@ -272,7 +284,15 @@ directoryWidget ::
 directoryWidget isCollector = mdo
     enterDirEvt <- elClass "nav" "panel" $ do
       elClass "p" "FileExplorer_heading" $ dynText dirListHeaderDyn
-      divClass "panel-block" $ text "下载"
+      when isCollector $
+        divClass "panel-block" $ do
+          void $ buttonClassAttr "button" ("type" =: "button") $
+            dynText msgDownloadSelected
+          void $ buttonClassAttr "button" ("type" =: "button") $
+            dynText msgDeleteSelected
+          void $ buttonClassAttr "button" ("type" =: "button") $
+            dynText msgAddDirectory
+          blank
       divClass "panel-block" $
         elClass "table" "FileExplorer_table" $ mdo
           colsFillAt 1 4
@@ -290,8 +310,10 @@ directoryWidget isCollector = mdo
               traverse (dirRow isCollector (selectAllCb ^. checkbox_change)) dirs
             let anyUnselectEvt' = fmap (leftmost . fmap _dirRow_unSelect) dirRowsEvt
                 enterDirEvt'' = fmap (leftmost . fmap _dirRow_enterDir) dirRowsEvt
+                -- isSelectedDynEvt = fmap (traverse _dirRow_isSelected) dirRowsEvt
+            -- isSelectedDyn'' <- join <$> foldDyn const (constDyn []) isSelectedDynEvt
             (,) <$> switchHold never anyUnselectEvt'
-                <*> switchHold never enterDirEvt''
+                 <*> switchHold never enterDirEvt''
 
           let selectAllConfig = CheckboxConfig (fmap (const False) anyUnselectEvt) (constDyn mempty)
 
@@ -302,6 +324,9 @@ directoryWidget isCollector = mdo
     msgDirNameDyn <- renderMsg' MsgDirName
     msgDirOwnerDyn <- renderMsg' MsgDirOwner
     msgSettings <- renderMsg' MsgSettings
+    msgDownloadSelected <- renderMsg' MsgDownloadSelected
+    msgDeleteSelected <- renderMsg' MsgDeleteSelected
+    msgAddDirectory <- renderMsg' MsgAddDirectory
 
     postBuildEvt <- getPostBuild
     dirListResultEvt <- Service.getDirList postBuildEvt
@@ -337,23 +362,24 @@ dirRow isCollector selectAllChangeEvt dir =
         (clickEvt, _) <- buttonClassAttr "button" mempty $
           elClass "span" "icon" $
             elClass "i" "fas fa-cog" blank
-        directorySettings (fmap (const dir) clickEvt)
-      cbChangeEvt <- elAttr "td" ("id" =: "FileExplorer_dirCheckboxCell") $
+        void $ directorySettings (fmap (const dir) clickEvt)
+      (v, cbChangeEvt) <- elAttr "td" ("id" =: "FileExplorer_dirCheckboxCell") $
         elClass "label" "checkbox" $ do
-          (Checkbox _ cbChangeEvt') <- checkbox False cbConf
-          pure cbChangeEvt'
+          (Checkbox v' cbChangeEvt') <- checkbox False cbConf
+          pure (v', cbChangeEvt')
 
       let selectAllEvt = ffilter id selectAllChangeEvt
           cbConf = CheckboxConfig selectAllEvt (constDyn mempty)
           unselectEvt = fmapMaybe (\x -> if x then Nothing else Just ()) cbChangeEvt
 
-      pure $ DirRow unselectEvt (fmap (const dir) enterDirEvt)
+      pure $ DirRow unselectEvt (fmap (const dir) enterDirEvt) v
   where
     dirName = dir ^. directory_name
 
 data DirRow t = DirRow
-  { _dirRow_unSelect :: Event t ()
-  , _dirRow_enterDir :: Event t Directory
+  { _dirRow_unSelect   :: Event t ()
+  , _dirRow_enterDir   :: Event t Directory
+  , _dirRow_isSelected :: Dynamic t Bool
   }
 
 -- idAttr :: Text -> Map Text Text

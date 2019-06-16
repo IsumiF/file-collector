@@ -18,3 +18,7 @@ FileNameFormat format@Text: 文件名格式为#{format}
 MaxFiles n@Text: 最多#{n}个文件
 UploadRules: 上传约束：
 Settings: 设置
+DownloadSelected: 下载选中
+DeleteSelected: 删除选中
+AddDirectory: 新建目录
+Delete: 删除

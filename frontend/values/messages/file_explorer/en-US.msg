@@ -18,3 +18,7 @@ FileNameFormat format@Text: File name in regex #{format}
 MaxFiles n@Text: At most #{n} files
 UploadRules: Upload Rules:
 Settings: Settings
+DownloadSelected: Download Selected
+DeleteSelected: Delete Selected
+AddDirectory: New Directory
+Delete: Delete

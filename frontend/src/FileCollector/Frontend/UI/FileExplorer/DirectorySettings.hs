@@ -45,7 +45,7 @@ directorySettings ::
   , Service.MonadDirectoryUploaders t m
   , Service.MonadDirectory t m
   ) => Event t Directory
-    -> m ()
+    -> m (Event t ()) -- ^ refresh event
 directorySettings openEvt =
     dialog DialogStyleDefault openEvt $ mdo
       handlerParams <- elClass "nav" "panel" $ concatM
@@ -148,7 +148,7 @@ directorySettings openEvt =
       msgSaveFailed <- renderMsg' MsgSaveFailed
       -- Handler
       HandlerResult{..} <- directorySettingsHandler handlerParams { openEvt = Last (Just openEvt) }
-      blank
+      pure refreshEvent
     where
       renderMsg' = renderMsg (Proxy :: Proxy env) DirectorySettings
 
@@ -184,6 +184,7 @@ data HandlerResult t = HandlerResult
   , uploadersDyn             :: Dynamic t [UserName]
   , showSaveSucceeded        :: Event t ()
   , showSaveFailed           :: Event t ()
+  , refreshEvent             :: Event t ()
   }
 
 directorySettingsHandler ::
@@ -227,7 +228,8 @@ directorySettingsHandler HandlerParams{..} = mdo
         fileNameFormatRule = (fmap . fmap) RuleFileNameFormat fileNameFormat
         uploadRules = catMaybes <$> sequenceA [ fileSizeLimitRule
                                               , fileCountLimitRule
-                                              , fileNameFormatRule]
+                                              , fileNameFormatRule
+                                              ]
         newDirectoryDyn = Directory
           <$> newDirNameDyn
           <*> ownerNameDyn'
@@ -235,7 +237,8 @@ directorySettingsHandler HandlerParams{..} = mdo
           <*> uploadRules
     putDirResultEvt <-
       Service.putDir ownerNameDyn dirNameDyn (fmap Right newDirectoryDyn) clickSave'
-    _ <- Service.putDirUploaders ownerNameDyn dirNameDyn (fmap Right uploadersDyn) clickSave'
+    putDirUploadersResultEvt <-
+      Service.putDirUploaders ownerNameDyn dirNameDyn (fmap Right uploadersDyn) clickSave'
 
     -- output
     let setNameEvt = fmap (convert . (^. directory_name)) openEvt'
@@ -250,10 +253,11 @@ directorySettingsHandler HandlerParams{..} = mdo
         cbFileCountLimitSetValue = fmap (isJust . getRuleFileCountLimit) openEvt'
         setFileCountLimit = fmap (displayMaybe . getRuleFileCountLimit) openEvt'
         cbFileNameFormatSetValue = fmap (isJust . getRuleFileNameFormat) openEvt'
-        setFileNameFormat = fmap (displayMaybe . getRuleFileNameFormat) openEvt'
+        setFileNameFormat = fmap (displayMaybeText . getRuleFileNameFormat) openEvt'
     uploadersDyn <- foldDyn ($) [] updateUploadersEvt
     let showSaveSucceeded = void $ ffilter isResponseSuccess putDirResultEvt
         showSaveFailed = void $ ffilter (not . isResponseSuccess) putDirResultEvt
+        refreshEvent = leftmost [void putDirResultEvt, void putDirUploadersResultEvt]
 
     pure HandlerResult{..}
   where
@@ -316,6 +320,10 @@ safeHead (x:_) = Just x
 displayMaybe :: Show a => Maybe a -> Text
 displayMaybe Nothing  = ""
 displayMaybe (Just x) = T.pack . show $ x
+
+displayMaybeText :: Maybe Text -> Text
+displayMaybeText Nothing  = ""
+displayMaybeText (Just x) = x
 
 formDateToDay :: Text -> Maybe Day
 formDateToDay str = parseTimeM True defaultTimeLocale "%Y-%m-%d" (T.unpack str)
