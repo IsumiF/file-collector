@@ -7,6 +7,7 @@ module FileCollector.Frontend.Main
   ( jsmMain
   ) where
 
+import Control.Lens
 import Control.Monad.Reader
 import Data.Time (utc)
 import Language.Javascript.JSaddle.Types (JSM)
@@ -15,6 +16,7 @@ import Reflex.Dom.Main (mainWidgetWithHead)
 import Servant.Common.BaseUrl (BaseUrl (BaseFullUrl), Scheme (Http))
 
 import           FileCollector.Frontend.AppEnv
+import           FileCollector.Frontend.Config
 import qualified FileCollector.Frontend.Core.Login as Core
 import           FileCollector.Frontend.Core.TimeZone (getBrowserTimeZone)
 import           FileCollector.Frontend.Service (generateServiceAccessors)
@@ -45,22 +47,29 @@ bodyElement = do
     ) blank
 
 primaryWidget :: forall t m. MonadWidget t m => m ()
-primaryWidget = mdo
-    (langDyn', loggedUserDyn') <- flip runReaderT appEnv $ do
-      (langDyn, logoutEvt) <- topBar
-      elClass "section" "section" $
-        divClass "container" $ do
-          loginEvt <- loginWidget
-          FileExplorer.widget
+primaryWidget =
+    case config of
+      Nothing -> error "Failed to read compile time config"
+      Just config' -> mdo
+        (langDyn', loggedUserDyn') <- flip runReaderT appEnv $ do
+          (langDyn, logoutEvt) <- topBar
+          elClass "section" "section" $
+            divClass "container" $ do
+              loginEvt <- loginWidget
+              FileExplorer.widget
 
-          loggedUserDyn <- Core.combineUserEvent logoutEvt loginEvt
-          pure (langDyn, loggedUserDyn)
+              loggedUserDyn <- Core.combineUserEvent logoutEvt loginEvt
+              pure (langDyn, loggedUserDyn)
 
-    let baseUrl = BaseFullUrl Http "127.0.0.1" 8080 ""
-    sa <- runReaderT generateServiceAccessors baseUrl
-    postBuildEvt <- getPostBuild
-    timeZoneDyn <- getBrowserTimeZone postBuildEvt >>= holdDyn utc
+        let baseUrl = BaseFullUrl
+              Http
+              (config' ^. config_serverIp)
+              (config' ^. config_serverPort)
+              ""
+        sa <- runReaderT generateServiceAccessors baseUrl
+        postBuildEvt <- getPostBuild
+        timeZoneDyn <- getBrowserTimeZone postBuildEvt >>= holdDyn utc
 
-    let appEnv = mkAppEnv sa langDyn' loggedUserDyn' timeZoneDyn
+        let appEnv = mkAppEnv sa langDyn' loggedUserDyn' timeZoneDyn
 
-    blank
+        blank

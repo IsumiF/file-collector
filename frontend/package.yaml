@@ -13,6 +13,11 @@ extra-source-files:
 - static/*.ico
 - static/js/**/*.js
 
+flags:
+  production:
+    manual: True
+    default: False
+
 ghc-options: -Wall -Wno-simplifiable-class-constraints
 
 default-extensions:
@@ -40,6 +45,8 @@ dependencies:
 - data-default ^>= 0.7.1.1
 - shakespeare ^>= 2.0.20
 - generic-deriving ^>= 1.12.2
+- bytestring ^>= 0.10.8.2
+- file-embed ^>= 0.0.10.1
 
 custom-setup:
   dependencies:
@@ -55,6 +62,9 @@ library:
   - src
   c-sources:
   - csrc/**.c
+  when:
+    - condition: flag(production)
+      cpp-options: -DPRODUCTION
 
 executables:
   client:
