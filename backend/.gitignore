@@ -1,5 +1,0 @@
-dist*/
-.ghc.environment.*
-.stack-work/
-/config/
-/devres/
